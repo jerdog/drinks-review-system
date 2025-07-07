@@ -10,7 +10,7 @@ A modern web application for reviewing wines and cocktails, similar to Untappd b
 - **Check-ins**: Track where you had your drinks
 - **Discovery**: Search and discover new beverages
 - **Mobile-First**: Responsive design with future React Native mobile app
-- **Modern Tech Stack**: Fastify API, PostgreSQL (Neon), Bulma CSS, React frontend
+- **Modern Tech Stack**: Fastify API, PostgreSQL (Neon), Tailwind CSS, React frontend
 
 ## Tech Stack
 
@@ -24,7 +24,7 @@ A modern web application for reviewing wines and cocktails, similar to Untappd b
 
 ### Frontend
 - **Framework**: React 18 with Vite
-- **CSS Framework**: Bulma
+- **CSS Framework**: Tailwind CSS
 - **State Management**: React Context API
 - **Routing**: React Router DOM
 - **Icons**: Font Awesome
@@ -86,13 +86,14 @@ A modern web application for reviewing wines and cocktails, similar to Untappd b
    cd packages/database
    npm run generate
    npx prisma db push
+   npm run seed
    ```
 
 5. **Start development servers**
    ```bash
    # Terminal 1 - API
    cd apps/api
-   npm run dev
+   npm start
 
    # Terminal 2 - Web
    cd apps/web
@@ -163,9 +164,22 @@ AWS_S3_BUCKET=...
 - `npm run seed` - Seed database with sample data
 - `npm run studio` - Open Prisma Studio
 
-## Phase 2: Beverage & Review System (Backend) ✅
+## Current Status
 
-- **Status:** Complete
+### ✅ Phase 1: Authentication System (Complete)
+- **Backend**: JWT authentication with bcrypt password hashing
+- **Frontend**: Login/register pages with AuthContext
+- **Features**: User registration, login, logout, profile management
+- **Test Credentials**: `test2@example.com` / `password123`
+
+### ✅ Phase 2: Beverage & Review System (Complete)
+- **Backend**: Complete beverage and review API with full CRUD operations
+- **Frontend**: Beverage listing, detail pages, review creation and display
+- **Features**:
+  - Search and filter beverages
+  - Create reviews with ratings (1-5 stars)
+  - View reviews with proper star display
+  - Responsive design with Tailwind CSS
 - **API Endpoints:**
   - `GET /beverages` - List beverages (with filters, pagination)
   - `GET /beverages/:id` - Get beverage details
@@ -181,158 +195,58 @@ AWS_S3_BUCKET=...
   - `DELETE /reviews/:id` - Delete review (auth required)
   - `GET /users/:userId/reviews` - List reviews by user
   - `POST /reviews/:id/like` - Like/unlike a review (auth required)
-- **Seed Data:**
-  - Run `npm run seed` in `packages/database` to populate beverages and categories
-- **Troubleshooting:**
-  - Ensure `.env` and `DATABASE_URL` are consistent across all packages
-  - If you see `@prisma/client did not initialize yet`, run `npx prisma generate` in the correct package
-  - Restart the API after seeding or schema changes
 
-## Phase 2: Frontend Integration ✅
+### 🔄 Phase 3: Social Features (In Progress)
+- User profiles and following system
+- Like/unlike reviews
+- Comments on reviews
+- Activity feed
+- Notifications
 
-- **Status:** Complete
-- **Frontend Pages:**
-  - `/beverages` - Beverage listing with search, filter, and pagination
-  - `/beverages/:id` - Beverage detail page with reviews and review creation
-- **Features:**
-  - Responsive design with Tailwind CSS
-  - Search beverages by name, region, varietal
-  - Filter by category and type
-  - Pagination for large datasets
-  - Review creation with rating, notes, price, serving type
-  - Anonymous and public/private review options
-  - Star rating system (1-5 stars)
-  - Authentication integration
-  - Accessibility features (ARIA labels, keyboard navigation)
-- **Test Credentials:**
-  - Email: `test2@example.com`
-  - Password: `password123`
-  - Username: `testuser2`
-- **Testing:**
-  - Frontend: `http://localhost:3000`
-  - API: `http://localhost:3001`
-  - Status Page: `http://localhost:3000/status`
+### 📋 Phase 4: Advanced Features (Planned)
+- Venue integration
+- Check-ins
+- Gamification (badges, achievements)
+- Mobile app (React Native)
+- Advanced search and recommendations
 
-## API Endpoints
+## Testing
 
-### Authentication
-- `POST /auth/register` - Register new user
-- `POST /auth/login` - Login user
-- `GET /auth/:provider` - Social login (placeholder)
-
-### User Management
-- `GET /users/me` - Get current user profile (protected)
-- `PUT /users/me` - Update current user profile (protected)
-- `GET /users/:username` - Get public user profile
-- `POST /users/:username/follow` - Follow user (protected)
-- `DELETE /users/:username/follow` - Unfollow user (protected)
-- `GET /users/:username/followers` - Get user followers
-- `GET /users/:username/following` - Get user following
-
-### Beverages
-- `GET /beverages` - List beverages (filters: type, category, search, approved)
-- `GET /beverages/:id` - Get beverage details
-- `GET /beverages/categories` - List beverage categories
-- `GET /beverages/search` - Search beverages
-- `POST /beverages` - Suggest or create beverage (auth required)
-- `PUT /beverages/:id` - Update beverage (admin only)
-- `DELETE /beverages/:id` - Delete beverage (admin only)
-
-### Reviews
-- `GET /reviews` - List reviews (filters: beverageId, userId, rating, sort)
-- `GET /reviews/:id` - Get review details
-- `POST /reviews` - Create review (auth required)
-- `PUT /reviews/:id` - Update review (auth required)
-- `DELETE /reviews/:id` - Delete review (auth required)
-- `GET /users/:userId/reviews` - List reviews by user
-- `POST /reviews/:id/like` - Like/unlike a review (auth required)
-
-### Utility
-- `GET /health` - Health check
-- `GET /debug/routes` - List all registered routes
-
-## Frontend Pages
-
-### Public Pages
-- `/` - Homepage with features and recent reviews
-- `/login` - User login page
-- `/register` - User registration page
-- `/search` - Beverage search and discovery
-- `/leaderboard` - Top reviewers and achievements
-
-### Protected Pages
-- `/dashboard` - User dashboard
-- `/profile/:username` - User profile pages
-- `/review/:id` - Individual review page
-
-### Development Pages
-- `/status` - System status and integration tests
-
-## Current Status
-
-### ✅ Phase 1 - Authentication System (COMPLETED)
-- [x] Project structure and monorepo setup
-- [x] Fastify API with all major plugins
-- [x] React frontend with Vite and Bulma
-- [x] Complete Prisma database schema
-- [x] User authentication (JWT + bcrypt)
-- [x] User registration and login
-- [x] Protected routes and middleware
-- [x] User profile management
-- [x] Social features (follow/unfollow)
-- [x] Frontend authentication context
-- [x] Login and registration pages
-- [x] Database deployment (Neon PostgreSQL)
-- [x] All authentication endpoints working
-- [x] Frontend-backend integration complete
-- [x] Status page for system monitoring
-- [x] Comprehensive integration tests
-
-### 🚧 Phase 2 - Core Features (NEXT)
-- [ ] Beverage review system
-- [ ] Search and discovery
-- [ ] Photo upload functionality
-- [ ] Comments and likes
-- [ ] Check-ins and venues
-- [ ] Badges and achievements
-
-### 📋 Phase 3 - Advanced Features (PLANNED)
-- [ ] OAuth social login (Google, GitHub)
-- [ ] Mobile app (React Native)
-- [ ] Real-time notifications
-- [ ] Advanced search filters
-- [ ] Admin dashboard
-- [ ] Production deployment
-
-## Testing & Monitoring
-
-### Status Page (`/status`)
-The application includes a comprehensive status page for monitoring and testing:
-
-- **API Status Check** - Real-time backend connectivity
-- **Authentication Status** - Current user login state
-- **Integration Tests** - Test registration, login, protected endpoints, database
-- **System Information** - Environment and configuration details
-
-### Running Tests
+### Quick Test
 1. Visit http://localhost:3000/status
-2. Click "Run All Tests" for comprehensive system verification
-3. Use individual test buttons for specific functionality testing
+2. Use the "Quick Login" button
+3. Test the various API endpoints
+4. Try creating reviews with different ratings
+
+### Manual Testing
+1. Register a new account or use test credentials
+2. Browse beverages at http://localhost:3000/beverages
+3. Click on a beverage to view details
+4. Create a review with rating and notes
+5. Verify the review displays correctly
+
+## Troubleshooting
+
+### Common Issues
+- **Database Connection**: Ensure `DATABASE_URL` is set correctly in all packages
+- **Prisma Client**: Run `npx prisma generate` in `packages/database` if you see initialization errors
+- **Authentication**: Check that JWT_SECRET is set and consistent
+- **CORS**: Ensure CORS_ORIGIN matches your frontend URL
+
+### Development Tips
+- Use the Status page (`/status`) for quick API testing
+- Check API logs for detailed error information
+- Use browser dev tools to inspect network requests
+- Restart servers after environment variable changes
 
 ## Contributing
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+2. Create a feature branch
 3. Make your changes
-4. Add tests if applicable
-5. Commit your changes (`git commit -m 'Add some amazing feature'`)
-6. Push to the branch (`git push origin feature/amazing-feature`)
-7. Open a Pull Request
+4. Test thoroughly
+5. Submit a pull request
 
 ## License
 
-MIT License - see LICENSE file for details.
-
-## Support
-
-For questions or issues, please open an issue on GitHub.
+MIT License - see LICENSE file for details

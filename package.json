@@ -1,6 +1,6 @@
 {
   "name": "wine-cocktail-review-platform",
-  "version": "1.0.0",
+  "version": "0.2.0",
   "description": "A modern web application for reviewing wines and cocktails",
   "private": true,
   "scripts": {
