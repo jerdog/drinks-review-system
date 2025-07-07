@@ -1,0 +1,31 @@
+{
+  "name": "wine-cocktail-review-platform",
+  "version": "1.0.0",
+  "description": "A modern web application for reviewing wines and cocktails",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm run --parallel dev",
+    "dev:web": "pnpm --filter web dev",
+    "dev:api": "pnpm --filter api dev",
+    "build": "pnpm run --recursive build",
+    "build:web": "pnpm --filter web build",
+    "build:api": "pnpm --filter api build",
+    "test": "pnpm run --recursive test",
+    "lint": "pnpm run --recursive lint",
+    "lint:fix": "pnpm run --recursive lint:fix",
+    "db:migrate": "pnpm --filter database migrate",
+    "db:generate": "pnpm --filter database generate",
+    "db:seed": "pnpm --filter database seed",
+    "clean": "pnpm run --recursive clean",
+    "setup": "pnpm install && pnpm db:generate && pnpm db:migrate"
+  },
+  "devDependencies": {
+    "prettier": "^3.0.0",
+    "eslint": "^8.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@8.0.0"
+}

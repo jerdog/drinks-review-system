@@ -1,0 +1,14 @@
+{
+  "name": "utils",
+  "version": "1.0.0",
+  "description": "Shared utility functions and helpers",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "lint": "eslint src --ext .js",
+    "lint:fix": "eslint src --ext .js --fix"
+  },
+  "devDependencies": {
+    "eslint": "^8.0.0"
+  }
+}

@@ -1,0 +1,334 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User management
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  username      String    @unique
+  password      String?   // For email/password authentication
+  displayName   String?
+  bio           String?
+  location      String?
+  avatar        String?
+  isPrivate     Boolean   @default(false)
+  isAdmin       Boolean   @default(false)
+  isVerified    Boolean   @default(false)
+  preferences   Json?     // User preferences as JSON
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // OAuth accounts
+  oauthAccounts OAuthAccount[]
+
+  // User relationships
+  followers     Follows[] @relation("UserFollowers")
+  following     Follows[] @relation("UserFollowing")
+
+  // User content
+  reviews       Review[]
+  comments      Comment[]
+  likes         Like[]
+  checkIns      CheckIn[]
+  photos        Photo[]
+  notifications Notification[]
+
+  // User achievements
+  userBadges    UserBadge[]
+  achievements  UserAchievement[]
+
+  // User sessions
+  sessions      Session[]
+
+  @@map("users")
+}
+
+model OAuthAccount {
+  id                String  @id @default(cuid())
+  provider          String  // "google" or "github"
+  providerAccountId String
+  refreshToken      String?
+  accessToken       String?
+  expiresAt         Int?
+  tokenType         String?
+  scope             String?
+  idToken           String?
+  sessionState      String?
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("oauth_accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+// Social relationships
+model Follows {
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+
+  follower  User @relation("UserFollowers", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("UserFollowing", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@id([followerId, followingId])
+  @@map("follows")
+}
+
+// Beverage categories and hierarchy
+model BeverageCategory {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  parentId    String?
+  parent      BeverageCategory? @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    BeverageCategory[] @relation("CategoryHierarchy")
+  beverages   Beverage[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("beverage_categories")
+}
+
+// Beverages (wines, cocktails, liquors)
+model Beverage {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  type        String   // "wine", "cocktail", "liquor"
+  region      String?
+  varietal    String?  // For wines
+  abv         Float?   // Alcohol by volume
+  vintage     Int?     // For wines
+  isApproved  Boolean  @default(false)
+  suggestedBy String?  // User ID who suggested it
+  categoryId  String
+  category    BeverageCategory @relation(fields: [categoryId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Related content
+  reviews     Review[]
+  photos      Photo[]
+
+  @@map("beverages")
+}
+
+// Venues (bars, restaurants, etc.)
+model Venue {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  address     String?
+  city        String?
+  state       String?
+  country     String?
+  latitude    Float?
+  longitude   Float?
+  website     String?
+  phone       String?
+  isVerified  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Related content
+  reviews     Review[]
+  checkIns    CheckIn[]
+
+  @@map("venues")
+}
+
+// Reviews
+model Review {
+  id          String   @id @default(cuid())
+  rating      Int      // 1-5 stars
+  notes       String?  // Tasting notes
+  price       Float?   // Price paid
+  servingType String?  // "bottle", "glass", "shot"
+  isAnonymous Boolean  @default(false)
+  isPublic    Boolean  @default(true)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  beverageId  String
+  beverage    Beverage @relation(fields: [beverageId], references: [id], onDelete: Cascade)
+  venueId     String?
+  venue       Venue?   @relation(fields: [venueId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Related content
+  comments    Comment[]
+  likes       Like[]
+  photos      Photo[]
+  checkIns    CheckIn[]
+
+  @@map("reviews")
+}
+
+// Check-ins (separate from reviews)
+model CheckIn {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  venueId   String
+  venue     Venue    @relation(fields: [venueId], references: [id])
+  reviewId  String?  // Optional link to a review
+  review    Review?  @relation(fields: [reviewId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@map("check_ins")
+}
+
+// Comments on reviews
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reviewId  String
+  review    Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("comments")
+}
+
+// Likes on reviews
+model Like {
+  id       String @id @default(cuid())
+  userId   String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reviewId String
+  review   Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, reviewId])
+  @@map("likes")
+}
+
+// Photos
+model Photo {
+  id        String   @id @default(cuid())
+  url       String
+  altText   String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reviewId  String?
+  review    Review?  @relation(fields: [reviewId], references: [id])
+  beverageId String?
+  beverage  Beverage? @relation(fields: [beverageId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@map("photos")
+}
+
+// Badges and achievements
+model Badge {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String
+  icon        String   // Icon name or URL
+  color       String?  // Badge color
+  criteria    Json?    // Achievement criteria as JSON
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Related content
+  userBadges UserBadge[]
+
+  @@map("badges")
+}
+
+model UserBadge {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badgeId   String
+  badge     Badge    @relation(fields: [badgeId], references: [id])
+  earnedAt  DateTime @default(now())
+
+  @@unique([userId, badgeId])
+  @@map("user_badges")
+}
+
+model Achievement {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String
+  icon        String
+  points      Int      @default(0)
+  criteria    Json     // Achievement criteria as JSON
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Related content
+  userAchievements UserAchievement[]
+
+  @@map("achievements")
+}
+
+model UserAchievement {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievementId String
+  achievement  Achievement @relation(fields: [achievementId], references: [id])
+  earnedAt     DateTime @default(now())
+
+  @@unique([userId, achievementId])
+  @@map("user_achievements")
+}
+
+// Notifications
+model Notification {
+  id        String   @id @default(cuid())
+  type      String   // "like", "comment", "follow", "achievement", etc.
+  title     String
+  message   String
+  data      Json?    // Additional data as JSON
+  isRead    Boolean  @default(false)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@map("notifications")
+}
+
+// Admin audit log
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String   // "user_created", "review_deleted", "beverage_approved", etc.
+  entityType String  // "user", "review", "beverage", etc.
+  entityId  String?
+  data      Json?    // Additional data as JSON
+  adminId   String?  // Admin who performed the action
+  createdAt DateTime @default(now())
+
+  @@map("audit_logs")
+}
