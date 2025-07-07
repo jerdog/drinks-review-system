@@ -163,6 +163,31 @@ AWS_S3_BUCKET=...
 - `npm run seed` - Seed database with sample data
 - `npm run studio` - Open Prisma Studio
 
+## Phase 2: Beverage & Review System (Backend) ✅
+
+- **Status:** Complete
+- **API Endpoints:**
+  - `GET /beverages` - List beverages (with filters, pagination)
+  - `GET /beverages/:id` - Get beverage details
+  - `GET /beverages/categories` - List beverage categories
+  - `GET /beverages/search` - Search beverages
+  - `POST /beverages` - Suggest or create beverage (auth required)
+  - `PUT /beverages/:id` - Update beverage (admin only)
+  - `DELETE /beverages/:id` - Delete beverage (admin only)
+  - `GET /reviews` - List reviews (with filters, pagination)
+  - `GET /reviews/:id` - Get review details
+  - `POST /reviews` - Create review (auth required)
+  - `PUT /reviews/:id` - Update review (auth required)
+  - `DELETE /reviews/:id` - Delete review (auth required)
+  - `GET /users/:userId/reviews` - List reviews by user
+  - `POST /reviews/:id/like` - Like/unlike a review (auth required)
+- **Seed Data:**
+  - Run `npm run seed` in `packages/database` to populate beverages and categories
+- **Troubleshooting:**
+  - Ensure `.env` and `DATABASE_URL` are consistent across all packages
+  - If you see `@prisma/client did not initialize yet`, run `npx prisma generate` in the correct package
+  - Restart the API after seeding or schema changes
+
 ## API Endpoints
 
 ### Authentication
@@ -178,6 +203,24 @@ AWS_S3_BUCKET=...
 - `DELETE /users/:username/follow` - Unfollow user (protected)
 - `GET /users/:username/followers` - Get user followers
 - `GET /users/:username/following` - Get user following
+
+### Beverages
+- `GET /beverages` - List beverages (filters: type, category, search, approved)
+- `GET /beverages/:id` - Get beverage details
+- `GET /beverages/categories` - List beverage categories
+- `GET /beverages/search` - Search beverages
+- `POST /beverages` - Suggest or create beverage (auth required)
+- `PUT /beverages/:id` - Update beverage (admin only)
+- `DELETE /beverages/:id` - Delete beverage (admin only)
+
+### Reviews
+- `GET /reviews` - List reviews (filters: beverageId, userId, rating, sort)
+- `GET /reviews/:id` - Get review details
+- `POST /reviews` - Create review (auth required)
+- `PUT /reviews/:id` - Update review (auth required)
+- `DELETE /reviews/:id` - Delete review (auth required)
+- `GET /users/:userId/reviews` - List reviews by user
+- `POST /reviews/:id/like` - Like/unlike a review (auth required)
 
 ### Utility
 - `GET /health` - Health check

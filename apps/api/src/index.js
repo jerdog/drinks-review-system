@@ -5,6 +5,8 @@ import dotenv from 'dotenv';
 // Import routes
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
+import * as beverageRoutes from './routes/beverages.js';
+import * as reviewRoutes from './routes/reviews.js';
 
 // Import middleware
 import { authenticateToken, optionalAuth } from './middleware/auth.js';
@@ -48,6 +50,24 @@ app.get('/users/:username/following', { preHandler: optionalAuth }, userRoutes.g
 // Protected user routes (authentication required)
 app.post('/users/:username/follow', { preHandler: authenticateToken }, userRoutes.followUser);
 app.delete('/users/:username/follow', { preHandler: authenticateToken }, userRoutes.unfollowUser);
+
+// Beverage routes
+app.get('/beverages', beverageRoutes.getBeverages);
+app.get('/beverages/search', beverageRoutes.searchBeverages);
+app.get('/beverages/categories', beverageRoutes.getCategories);
+app.get('/beverages/:id', beverageRoutes.getBeverage);
+app.post('/beverages', { preHandler: authenticateToken }, beverageRoutes.createBeverage);
+app.put('/beverages/:id', { preHandler: authenticateToken }, beverageRoutes.updateBeverage);
+app.delete('/beverages/:id', { preHandler: authenticateToken }, beverageRoutes.deleteBeverage);
+
+// Review routes
+app.get('/reviews', reviewRoutes.getReviews);
+app.get('/reviews/:id', reviewRoutes.getReview);
+app.post('/reviews', { preHandler: authenticateToken }, reviewRoutes.createReview);
+app.put('/reviews/:id', { preHandler: authenticateToken }, reviewRoutes.updateReview);
+app.delete('/reviews/:id', { preHandler: authenticateToken }, reviewRoutes.deleteReview);
+app.get('/users/:userId/reviews', reviewRoutes.getUserReviews);
+app.post('/reviews/:id/like', { preHandler: authenticateToken }, reviewRoutes.toggleReviewLike);
 
 // Health check
 app.get('/health', async (request, reply) => {

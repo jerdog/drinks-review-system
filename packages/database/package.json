@@ -20,5 +20,8 @@
   },
   "devDependencies": {
     "eslint": "^8.0.0"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
   }
 }
