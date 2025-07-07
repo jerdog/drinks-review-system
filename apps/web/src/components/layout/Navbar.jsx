@@ -54,6 +54,10 @@ function Navbar() {
             <Link className="navbar-item" to="/leaderboard" onClick={() => setIsMenuOpen(false)}>
               Leaderboard
             </Link>
+
+            <Link className="navbar-item" to="/status" onClick={() => setIsMenuOpen(false)}>
+              Status
+            </Link>
           </div>
 
           <div className="navbar-end">

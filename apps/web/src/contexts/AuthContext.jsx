@@ -40,8 +40,8 @@ export function AuthProvider({ children }) {
       });
 
       if (response.ok) {
-        const userData = await response.json();
-        setUser(userData);
+        const data = await response.json();
+        setUser(data.user);
         setIsAuthenticated(true);
       } else {
         // Token is invalid, remove it
@@ -169,7 +169,7 @@ export function AuthProvider({ children }) {
       const data = await response.json();
 
       if (response.ok) {
-        setUser(data);
+        setUser(data.user);
         toast.success('Profile updated successfully!');
         return { success: true };
       } else {

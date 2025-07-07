@@ -102,6 +102,7 @@ A modern web application for reviewing wines and cocktails, similar to Untappd b
 6. **Access the application**
    - Frontend: http://localhost:3000
    - API: http://localhost:3001/health
+   - Status Page: http://localhost:3000/status
 
 ## Environment Variables
 
@@ -182,6 +183,23 @@ AWS_S3_BUCKET=...
 - `GET /health` - Health check
 - `GET /debug/routes` - List all registered routes
 
+## Frontend Pages
+
+### Public Pages
+- `/` - Homepage with features and recent reviews
+- `/login` - User login page
+- `/register` - User registration page
+- `/search` - Beverage search and discovery
+- `/leaderboard` - Top reviewers and achievements
+
+### Protected Pages
+- `/dashboard` - User dashboard
+- `/profile/:username` - User profile pages
+- `/review/:id` - Individual review page
+
+### Development Pages
+- `/status` - System status and integration tests
+
 ## Current Status
 
 ### ✅ Phase 1 - Authentication System (COMPLETED)
@@ -198,6 +216,9 @@ AWS_S3_BUCKET=...
 - [x] Login and registration pages
 - [x] Database deployment (Neon PostgreSQL)
 - [x] All authentication endpoints working
+- [x] Frontend-backend integration complete
+- [x] Status page for system monitoring
+- [x] Comprehensive integration tests
 
 ### 🚧 Phase 2 - Core Features (NEXT)
 - [ ] Beverage review system
@@ -214,6 +235,21 @@ AWS_S3_BUCKET=...
 - [ ] Advanced search filters
 - [ ] Admin dashboard
 - [ ] Production deployment
+
+## Testing & Monitoring
+
+### Status Page (`/status`)
+The application includes a comprehensive status page for monitoring and testing:
+
+- **API Status Check** - Real-time backend connectivity
+- **Authentication Status** - Current user login state
+- **Integration Tests** - Test registration, login, protected endpoints, database
+- **System Information** - Environment and configuration details
+
+### Running Tests
+1. Visit http://localhost:3000/status
+2. Click "Run All Tests" for comprehensive system verification
+3. Use individual test buttons for specific functionality testing
 
 ## Contributing
 

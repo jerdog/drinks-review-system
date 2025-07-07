@@ -20,6 +20,7 @@ import ProfilePage from './pages/ProfilePage'
 import ReviewPage from './pages/ReviewPage'
 import SearchPage from './pages/SearchPage'
 import LeaderboardPage from './pages/LeaderboardPage'
+import StatusPage from './pages/StatusPage'
 
 // Create a client
 const queryClient = new QueryClient({
@@ -48,6 +49,7 @@ function App() {
                 <Route path="/review/:id" element={<ReviewPage />} />
                 <Route path="/search" element={<SearchPage />} />
                 <Route path="/leaderboard" element={<LeaderboardPage />} />
+                <Route path="/status" element={<StatusPage />} />
               </Routes>
             </main>
             <Footer />

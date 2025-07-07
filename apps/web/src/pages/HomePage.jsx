@@ -1,41 +1,41 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
-const HomePage = () => {
+/**
+ * Home page component
+ * @returns {JSX.Element} The home page
+ */
+function HomePage() {
+  const { isAuthenticated } = useAuth();
+
   return (
-    <div>
+    <div className="container">
       {/* Hero Section */}
-      <section className="hero is-primary is-medium">
+      <section className="hero is-primary">
         <div className="hero-body">
           <div className="container">
-            <div className="columns is-vcentered">
-              <div className="column is-6">
-                <h1 className="title is-1 has-text-white">
-                  Discover Amazing Wines & Cocktails
-                </h1>
-                <h2 className="subtitle is-4 has-text-white">
-                  Rate, review, and share your favorite beverages with a community of enthusiasts
-                </h2>
-                <div className="buttons">
-                  <Link to="/search" className="button is-white is-medium">
-                    <span className="icon">
-                      <i className="fas fa-search"></i>
-                    </span>
-                    <span>Explore Beverages</span>
+            <h1 className="title">
+              Wine & Cocktail Reviews
+            </h1>
+            <h2 className="subtitle">
+              Discover, review, and share your favorite wines and cocktails
+            </h2>
+            <div className="buttons">
+              {!isAuthenticated ? (
+                <>
+                  <Link to="/register" className="button is-light is-medium">
+                    Get Started
                   </Link>
-                  <Link to="/login" className="button is-outlined is-white is-medium">
-                    <span className="icon">
-                      <i className="fas fa-user"></i>
-                    </span>
-                    <span>Join Community</span>
+                  <Link to="/login" className="button is-outlined is-light is-medium">
+                    Sign In
                   </Link>
-                </div>
-              </div>
-              <div className="column is-6">
-                <div className="has-text-centered">
-                  <i className="fas fa-wine-glass-alt fa-6x has-text-white"></i>
-                </div>
-              </div>
+                </>
+              ) : (
+                <Link to="/dashboard" className="button is-light is-medium">
+                  Go to Dashboard
+                </Link>
+              )}
             </div>
           </div>
         </div>
@@ -44,44 +44,50 @@ const HomePage = () => {
       {/* Features Section */}
       <section className="section">
         <div className="container">
-          <h2 className="title is-2 has-text-centered mb-6">Why Choose Our Platform?</h2>
+          <h3 className="title has-text-centered">Features</h3>
           <div className="columns">
-            <div className="column is-4">
+            <div className="column">
               <div className="card">
-                <div className="card-content has-text-centered">
-                  <div className="mb-4">
-                    <i className="fas fa-star fa-3x has-text-warning"></i>
+                <div className="card-content">
+                  <div className="content">
+                    <h4 className="title is-4">
+                      <span className="icon has-text-primary">
+                        <i className="fas fa-wine-glass"></i>
+                      </span>
+                      Discover Beverages
+                    </h4>
+                    <p>Find new wines and cocktails based on your preferences and community recommendations.</p>
                   </div>
-                  <h3 className="title is-4">Rate & Review</h3>
-                  <p className="subtitle is-6">
-                    Rate your favorite wines and cocktails with our 5-star system and share detailed tasting notes.
-                  </p>
                 </div>
               </div>
             </div>
-            <div className="column is-4">
+            <div className="column">
               <div className="card">
-                <div className="card-content has-text-centered">
-                  <div className="mb-4">
-                    <i className="fas fa-users fa-3x has-text-info"></i>
+                <div className="card-content">
+                  <div className="content">
+                    <h4 className="title is-4">
+                      <span className="icon has-text-primary">
+                        <i className="fas fa-star"></i>
+                      </span>
+                      Rate & Review
+                    </h4>
+                    <p>Share your tasting notes and ratings with the community.</p>
                   </div>
-                  <h3 className="title is-4">Social Community</h3>
-                  <p className="subtitle is-6">
-                    Follow other enthusiasts, like and comment on reviews, and build your network.
-                  </p>
                 </div>
               </div>
             </div>
-            <div className="column is-4">
+            <div className="column">
               <div className="card">
-                <div className="card-content has-text-centered">
-                  <div className="mb-4">
-                    <i className="fas fa-trophy fa-3x has-text-success"></i>
+                <div className="card-content">
+                  <div className="content">
+                    <h4 className="title is-4">
+                      <span className="icon has-text-primary">
+                        <i className="fas fa-users"></i>
+                      </span>
+                      Social Features
+                    </h4>
+                    <p>Follow friends, like reviews, and build your beverage community.</p>
                   </div>
-                  <h3 className="title is-4">Earn Badges</h3>
-                  <p className="subtitle is-6">
-                    Unlock achievements and badges as you explore different beverages and venues.
-                  </p>
                 </div>
               </div>
             </div>
@@ -305,8 +311,21 @@ const HomePage = () => {
           </div>
         </div>
       </section>
+
+      {/* CTA Section */}
+      <section className="section has-background-light">
+        <div className="container has-text-centered">
+          <h3 className="title">Ready to start your journey?</h3>
+          <p className="subtitle">Join thousands of wine and cocktail enthusiasts</p>
+          {!isAuthenticated && (
+            <Link to="/register" className="button is-primary is-medium">
+              Create Account
+            </Link>
+          )}
+        </div>
+      </section>
     </div>
-  )
+  );
 }
 
-export default HomePage
+export default HomePage;
