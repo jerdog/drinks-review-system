@@ -10,7 +10,7 @@ const authenticateToken = async (req, reply) => {
     const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
     if (!token) {
-      return reply.status(401).json({
+      return reply.code(401).send({
         success: false,
         message: 'Access token required'
       });
@@ -22,21 +22,21 @@ const authenticateToken = async (req, reply) => {
     return;
   } catch (error) {
     if (error.name === 'TokenExpiredError') {
-      return reply.status(401).json({
+      return reply.code(401).send({
         success: false,
         message: 'Token expired'
       });
     }
 
     if (error.name === 'JsonWebTokenError') {
-      return reply.status(401).json({
+      return reply.code(401).send({
         success: false,
         message: 'Invalid token'
       });
     }
 
     console.error('Auth middleware error:', error);
-    return reply.status(500).json({
+    return reply.code(500).send({
       success: false,
       message: 'Internal server error'
     });

@@ -51,6 +51,10 @@ function Navbar() {
               Discover
             </Link>
 
+            <Link className="navbar-item" to="/beverages" onClick={() => setIsMenuOpen(false)}>
+              Beverages
+            </Link>
+
             <Link className="navbar-item" to="/leaderboard" onClick={() => setIsMenuOpen(false)}>
               Leaderboard
             </Link>

@@ -121,7 +121,7 @@ export const createReview = async (request, reply) => {
     // Check if user already reviewed this beverage
     const existingReview = await prisma.review.findFirst({
       where: {
-        userId: user.id,
+        userId: user.userId,
         beverageId
       }
     });
@@ -147,7 +147,7 @@ export const createReview = async (request, reply) => {
         servingType,
         isAnonymous: isAnonymous || false,
         isPublic: isPublic !== false, // Default to public
-        userId: user.id,
+        userId: user.userId,
         beverageId,
         venueId: venueId || null
       },
@@ -192,7 +192,7 @@ export const updateReview = async (request, reply) => {
       return reply.code(404).send({ error: 'Review not found' });
     }
 
-    if (existingReview.userId !== user.id && !user.isAdmin) {
+    if (existingReview.userId !== user.userId && !user.isAdmin) {
       return reply.code(403).send({ error: 'You can only edit your own reviews' });
     }
 
@@ -252,7 +252,7 @@ export const deleteReview = async (request, reply) => {
       return reply.code(404).send({ error: 'Review not found' });
     }
 
-    if (existingReview.userId !== user.id && !user.isAdmin) {
+    if (existingReview.userId !== user.userId && !user.isAdmin) {
       return reply.code(403).send({ error: 'You can only delete your own reviews' });
     }
 
@@ -337,7 +337,7 @@ export const toggleReviewLike = async (request, reply) => {
     // Check if user already liked this review
     const existingLike = await prisma.like.findFirst({
       where: {
-        userId: user.id,
+        userId: user.userId,
         reviewId: id
       }
     });
@@ -352,7 +352,7 @@ export const toggleReviewLike = async (request, reply) => {
       // Like
       await prisma.like.create({
         data: {
-          userId: user.id,
+          userId: user.userId,
           reviewId: id
         }
       });

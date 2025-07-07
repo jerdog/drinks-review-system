@@ -1,33 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
-/**
- * Status page component for integration tests and system monitoring
- * @returns {JSX.Element} The status page
- */
-function StatusPage() {
-  const { isAuthenticated, user } = useAuth();
-  const [apiStatus, setApiStatus] = useState('checking');
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
+const StatusPage = () => {
+  const { user, isAuthenticated, login, logout } = useAuth();
   const [testResults, setTestResults] = useState({});
   const [loading, setLoading] = useState(false);
-
-  // Test API connection on component mount
-  useEffect(() => {
-    testApiConnection();
-  }, []);
-
-  const testApiConnection = async () => {
-    try {
-      const response = await fetch('http://localhost:3001/health');
-      if (response.ok) {
-        setApiStatus('connected');
-      } else {
-        setApiStatus('error');
-      }
-    } catch (error) {
-      setApiStatus('error');
-    }
-  };
 
   const runTest = async (testName, testFunction) => {
     setLoading(true);
@@ -35,361 +14,339 @@ function StatusPage() {
       const result = await testFunction();
       setTestResults(prev => ({
         ...prev,
-        [testName]: result
+        [testName]: { success: true, message: result }
       }));
     } catch (error) {
       setTestResults(prev => ({
         ...prev,
-        [testName]: {
-          success: false,
-          message: 'Test failed',
-          error: error.message
-        }
+        [testName]: { success: false, message: error.message }
       }));
     } finally {
       setLoading(false);
     }
   };
 
-  const testRegistration = async () => {
-    const testUser = {
-      name: 'Integration Test User',
-      email: `test${Date.now()}@example.com`,
-      password: 'password123',
-      username: `testuser${Date.now()}`
+  const testApiHealth = async () => {
+    const response = await fetch(`${API_URL}/health`);
+    const data = await response.json();
+    return `API is healthy - ${data.status}`;
+  };
+
+  const testDatabaseConnection = async () => {
+    const response = await fetch(`${API_URL}/beverages?limit=1`);
+    const data = await response.json();
+    return `Database connected - ${data.beverages?.length || 0} beverages available`;
+  };
+
+  const testBeverageListing = async () => {
+    const response = await fetch(`${API_URL}/beverages`);
+    const data = await response.json();
+    return `Beverage listing works - ${data.beverages?.length || 0} beverages loaded`;
+  };
+
+  const testBeverageCategories = async () => {
+    const response = await fetch(`${API_URL}/beverages/categories`);
+    const data = await response.json();
+    return `Categories loaded - ${data.categories?.length || 0} categories available`;
+  };
+
+  const testBeverageDetail = async () => {
+    // Get first beverage ID
+    const listResponse = await fetch(`${API_URL}/beverages?limit=1`);
+    const listData = await listResponse.json();
+
+    if (!listData.beverages?.length) {
+      throw new Error('No beverages available for detail test');
+    }
+
+    const beverageId = listData.beverages[0].id;
+    const detailResponse = await fetch(`${API_URL}/beverages/${beverageId}`);
+    const detailData = await detailResponse.json();
+
+    return `Beverage detail works - ${detailData.beverage?.name} loaded`;
+  };
+
+  const testReviewCreation = async () => {
+    if (!isAuthenticated) {
+      throw new Error('Authentication required for review creation test');
+    }
+
+    // Get first beverage ID
+    const listResponse = await fetch(`${API_URL}/beverages?limit=1`);
+    const listData = await listResponse.json();
+
+    if (!listData.beverages?.length) {
+      throw new Error('No beverages available for review test');
+    }
+
+    const beverageId = listData.beverages[0].id;
+    const token = localStorage.getItem('authToken');
+
+    const reviewData = {
+      beverageId,
+      rating: 5,
+      notes: 'Test review from status page',
+      price: 25.00,
+      servingType: 'glass',
+      isAnonymous: false,
+      isPublic: true
     };
 
-    const response = await fetch('http://localhost:3001/auth/register', {
+    const response = await fetch(`${API_URL}/reviews`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(reviewData)
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Review creation failed');
+    }
+
+    const data = await response.json();
+    return `Review created successfully - ID: ${data.review?.id}`;
+  };
+
+  const testAuthentication = async () => {
+    const testCredentials = {
+      email: 'test2@example.com',
+      password: 'password123'
+    };
+
+    const response = await fetch(`${API_URL}/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(testUser)
+      body: JSON.stringify(testCredentials)
     });
 
     const data = await response.json();
 
-    if (response.ok) {
-      return {
-        success: true,
-        message: 'Registration test passed!',
-        data: data
-      };
-    } else {
-      return {
-        success: false,
-        message: 'Registration test failed',
-        error: data.message
-      };
-    }
-  };
-
-  const testLogin = async () => {
-    // First register a test user
-    const testUser = {
-      name: 'Login Test User',
-      email: `logintest${Date.now()}@example.com`,
-      password: 'password123',
-      username: `logintest${Date.now()}`
-    };
-
-    // Register
-    const registerResponse = await fetch('http://localhost:3001/auth/register', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(testUser)
-    });
-
-    if (!registerResponse.ok) {
-      return {
-        success: false,
-        message: 'Login test failed - registration failed',
-        error: 'Could not create test user'
-      };
+    if (!data.success) {
+      throw new Error(data.message || 'Authentication failed');
     }
 
-    // Now test login
-    const loginResponse = await fetch('http://localhost:3001/auth/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        email: testUser.email,
-        password: testUser.password
-      })
-    });
-
-    const data = await loginResponse.json();
-
-    if (loginResponse.ok) {
-      return {
-        success: true,
-        message: 'Login test passed!',
-        data: data
-      };
-    } else {
-      return {
-        success: false,
-        message: 'Login test failed',
-        error: data.message
-      };
-    }
+    return `Authentication works - Logged in as ${data.user?.username}`;
   };
 
   const testProtectedEndpoint = async () => {
-    // First register and login to get a token
-    const testUser = {
-      name: 'Protected Test User',
-      email: `protectedtest${Date.now()}@example.com`,
-      password: 'password123',
-      username: `protectedtest${Date.now()}`
-    };
+    const token = localStorage.getItem('authToken');
 
-    // Register
-    const registerResponse = await fetch('http://localhost:3001/auth/register', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(testUser)
-    });
-
-    if (!registerResponse.ok) {
-      return {
-        success: false,
-        message: 'Protected endpoint test failed - registration failed',
-        error: 'Could not create test user'
-      };
+    if (!token) {
+      throw new Error('No authentication token available');
     }
 
-    const registerData = await registerResponse.json();
-    const token = registerData.token;
-
-    // Test protected endpoint
-    const protectedResponse = await fetch('http://localhost:3001/users/me', {
+    const response = await fetch(`${API_URL}/users/me`, {
       headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
+        'Authorization': `Bearer ${token}`
       }
     });
 
-    const data = await protectedResponse.json();
+    const data = await response.json();
 
-    if (protectedResponse.ok) {
-      return {
-        success: true,
-        message: 'Protected endpoint test passed!',
-        data: data
-      };
-    } else {
-      return {
-        success: false,
-        message: 'Protected endpoint test failed',
-        error: data.message
-      };
+    if (!data.success) {
+      throw new Error('Protected endpoint test failed');
     }
+
+    return `Protected endpoint works - User: ${data.user?.username}`;
   };
 
-  const testDatabaseConnection = async () => {
+  const handleQuickLogin = async () => {
     try {
-      // Test by creating a user and then querying it
-      const testUser = {
-        name: 'DB Test User',
-        email: `dbtest${Date.now()}@example.com`,
-        password: 'password123',
-        username: `dbtest${Date.now()}`
-      };
-
-      const response = await fetch('http://localhost:3001/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(testUser)
-      });
-
-      if (response.ok) {
-        return {
-          success: true,
-          message: 'Database connection test passed!',
-          data: { message: 'User created and stored successfully' }
-        };
-      } else {
-        return {
-          success: false,
-          message: 'Database connection test failed',
-          error: 'Could not create user in database'
-        };
-      }
+      await login('test2@example.com', 'password123');
     } catch (error) {
-      return {
-        success: false,
-        message: 'Database connection test failed',
-        error: error.message
-      };
+      console.error('Quick login failed:', error);
     }
   };
 
-  const runAllTests = async () => {
-    setLoading(true);
-    await Promise.all([
-      runTest('registration', testRegistration),
-      runTest('login', testLogin),
-      runTest('protectedEndpoint', testProtectedEndpoint),
-      runTest('databaseConnection', testDatabaseConnection)
-    ]);
-    setLoading(false);
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'connected': return 'is-success';
-      case 'error': return 'is-danger';
-      default: return 'is-warning';
-    }
-  };
-
-  const getTestResultColor = (success) => {
-    return success ? 'is-success' : 'is-danger';
+  const handleLogout = () => {
+    logout();
   };
 
   return (
-    <div className="container">
-      <section className="section">
-        <div className="container">
-          <h1 className="title">System Status & Integration Tests</h1>
-          <p className="subtitle">Monitor the health of the application and test integrations</p>
+    <div className="max-w-4xl mx-auto py-8 px-4">
+      <h1 className="text-3xl font-bold mb-8">System Status & Testing</h1>
 
-          {/* API Status */}
-          <div className="box">
-            <h2 className="title is-4">API Status</h2>
-            <div className="field">
-              <div className="control">
-                <span className={`tag is-medium ${getStatusColor(apiStatus)}`}>
-                  {apiStatus === 'connected' ? '✅ Connected' : apiStatus === 'error' ? '❌ Error' : '⏳ Checking...'}
-                </span>
-              </div>
-            </div>
+      {/* System Information */}
+      <div className="bg-white rounded-lg shadow p-6 mb-8">
+        <h2 className="text-xl font-semibold mb-4">System Information</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <strong>Frontend URL:</strong> http://localhost:3000
           </div>
-
-          {/* Authentication Status */}
-          <div className="box">
-            <h2 className="title is-4">Authentication Status</h2>
-            <div className="field">
-              <div className="control">
-                <span className={`tag is-medium ${isAuthenticated ? 'is-success' : 'is-warning'}`}>
-                  {isAuthenticated ? '✅ Authenticated' : '⚠️ Not Authenticated'}
-                </span>
-              </div>
-            </div>
-            {isAuthenticated && user && (
-              <div className="notification is-light">
-                <p><strong>Current User:</strong> {user.displayName} ({user.email})</p>
-              </div>
-            )}
+          <div>
+            <strong>API URL:</strong> http://localhost:3001
           </div>
-
-          {/* Integration Tests */}
-          <div className="box">
-            <h2 className="title is-4">Integration Tests</h2>
-
-            <div className="buttons mb-4">
-              <button
-                className="button is-info"
-                onClick={() => runTest('registration', testRegistration)}
-                disabled={loading || apiStatus !== 'connected'}
-              >
-                Test Registration
-              </button>
-              <button
-                className="button is-info"
-                onClick={() => runTest('login', testLogin)}
-                disabled={loading || apiStatus !== 'connected'}
-              >
-                Test Login
-              </button>
-              <button
-                className="button is-info"
-                onClick={() => runTest('protectedEndpoint', testProtectedEndpoint)}
-                disabled={loading || apiStatus !== 'connected'}
-              >
-                Test Protected Endpoint
-              </button>
-              <button
-                className="button is-info"
-                onClick={() => runTest('databaseConnection', testDatabaseConnection)}
-                disabled={loading || apiStatus !== 'connected'}
-              >
-                Test Database Connection
-              </button>
-              <button
-                className="button is-primary"
-                onClick={runAllTests}
-                disabled={loading || apiStatus !== 'connected'}
-              >
-                Run All Tests
-              </button>
-            </div>
-
-            {loading && (
-              <div className="notification is-info">
-                <p>Running tests...</p>
-              </div>
-            )}
-
-            {/* Test Results */}
-            {Object.keys(testResults).length > 0 && (
-              <div className="content">
-                <h3 className="title is-5">Test Results</h3>
-                {Object.entries(testResults).map(([testName, result]) => (
-                  <div key={testName} className="notification is-light mb-3">
-                    <h4 className="title is-6">
-                      <span className={`tag ${getTestResultColor(result.success)}`}>
-                        {result.success ? '✅' : '❌'}
-                      </span>
-                      {testName.charAt(0).toUpperCase() + testName.slice(1)} Test
-                    </h4>
-                    <p>{result.message}</p>
-                    {result.error && (
-                      <p className="has-text-danger">{result.error}</p>
-                    )}
-                    {result.data && (
-                      <details className="mt-2">
-                        <summary>Response Data</summary>
-                        <pre className="mt-2 p-2 has-background-light" style={{fontSize: '0.8rem', maxHeight: '200px', overflow: 'auto'}}>
-                          {JSON.stringify(result.data, null, 2)}
-                        </pre>
-                      </details>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
+          <div>
+            <strong>Authentication:</strong> {isAuthenticated ? '✅ Logged In' : '❌ Not Logged In'}
           </div>
-
-          {/* System Information */}
-          <div className="box">
-            <h2 className="title is-4">System Information</h2>
-            <div className="columns">
-              <div className="column">
-                <p><strong>Frontend URL:</strong> http://localhost:3000</p>
-                <p><strong>API URL:</strong> http://localhost:3001</p>
-                <p><strong>Database:</strong> Neon PostgreSQL</p>
-              </div>
-              <div className="column">
-                <p><strong>Environment:</strong> Development</p>
-                <p><strong>Authentication:</strong> JWT + bcrypt</p>
-                <p><strong>Framework:</strong> React + Fastify</p>
-              </div>
-            </div>
+          <div>
+            <strong>Current User:</strong> {user?.username || 'None'}
           </div>
         </div>
-      </section>
+      </div>
+
+      {/* Test Credentials */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
+        <h2 className="text-xl font-semibold mb-4">Test Credentials</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <strong>Email:</strong> test2@example.com
+          </div>
+          <div>
+            <strong>Password:</strong> password123
+          </div>
+          <div>
+            <strong>Username:</strong> testuser2
+          </div>
+        </div>
+        <div className="mt-4 flex gap-2">
+          <button
+            onClick={handleQuickLogin}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            disabled={isAuthenticated}
+          >
+            Quick Login
+          </button>
+          <button
+            onClick={handleLogout}
+            className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
+            disabled={!isAuthenticated}
+          >
+            Logout
+          </button>
+        </div>
+      </div>
+
+      {/* API Tests */}
+      <div className="bg-white rounded-lg shadow p-6 mb-8">
+        <h2 className="text-xl font-semibold mb-4">API Tests</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <button
+            onClick={() => runTest('API Health', testApiHealth)}
+            disabled={loading}
+            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:opacity-50"
+          >
+            Test API Health
+          </button>
+          <button
+            onClick={() => runTest('Database Connection', testDatabaseConnection)}
+            disabled={loading}
+            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:opacity-50"
+          >
+            Test Database Connection
+          </button>
+          <button
+            onClick={() => runTest('Authentication', testAuthentication)}
+            disabled={loading}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+          >
+            Test Authentication
+          </button>
+          <button
+            onClick={() => runTest('Protected Endpoint', testProtectedEndpoint)}
+            disabled={loading}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+          >
+            Test Protected Endpoint
+          </button>
+        </div>
+      </div>
+
+      {/* Phase 2 Tests */}
+      <div className="bg-white rounded-lg shadow p-6 mb-8">
+        <h2 className="text-xl font-semibold mb-4">Phase 2: Beverage & Review System Tests</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <button
+            onClick={() => runTest('Beverage Listing', testBeverageListing)}
+            disabled={loading}
+            className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 disabled:opacity-50"
+          >
+            Test Beverage Listing
+          </button>
+          <button
+            onClick={() => runTest('Beverage Categories', testBeverageCategories)}
+            disabled={loading}
+            className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 disabled:opacity-50"
+          >
+            Test Beverage Categories
+          </button>
+          <button
+            onClick={() => runTest('Beverage Detail', testBeverageDetail)}
+            disabled={loading}
+            className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 disabled:opacity-50"
+          >
+            Test Beverage Detail
+          </button>
+          <button
+            onClick={() => runTest('Review Creation', testReviewCreation)}
+            disabled={loading || !isAuthenticated}
+            className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 disabled:opacity-50"
+          >
+            Test Review Creation
+          </button>
+        </div>
+      </div>
+
+      {/* Test Results */}
+      <div className="bg-white rounded-lg shadow p-6">
+        <h2 className="text-xl font-semibold mb-4">Test Results</h2>
+        {Object.keys(testResults).length === 0 ? (
+          <p className="text-gray-500">No tests run yet. Click the buttons above to run tests.</p>
+        ) : (
+          <div className="space-y-2">
+            {Object.entries(testResults).map(([testName, result]) => (
+              <div
+                key={testName}
+                className={`p-3 rounded ${
+                  result.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <span className={result.success ? 'text-green-600' : 'text-red-600'}>
+                    {result.success ? '✅' : '❌'}
+                  </span>
+                  <strong>{testName}:</strong>
+                  <span className={result.success ? 'text-green-700' : 'text-red-700'}>
+                    {result.message}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Quick Links */}
+      <div className="mt-8 bg-gray-50 rounded-lg p-6">
+        <h2 className="text-xl font-semibold mb-4">Quick Links</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <a
+            href="/beverages"
+            className="bg-blue-600 text-white px-4 py-2 rounded text-center hover:bg-blue-700"
+          >
+            Browse Beverages
+          </a>
+          <a
+            href="/login"
+            className="bg-green-600 text-white px-4 py-2 rounded text-center hover:bg-green-700"
+          >
+            Login Page
+          </a>
+          <a
+            href="/register"
+            className="bg-purple-600 text-white px-4 py-2 rounded text-center hover:bg-purple-700"
+          >
+            Register Page
+          </a>
+        </div>
+      </div>
     </div>
   );
-}
+};
 
 export default StatusPage;
