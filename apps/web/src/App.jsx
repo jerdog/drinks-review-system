@@ -23,6 +23,11 @@ import LeaderboardPage from './pages/LeaderboardPage'
 import StatusPage from './pages/StatusPage'
 import BeveragesPage from './pages/beverages-page.jsx';
 import BeverageDetailPage from './pages/beverage-detail-page.jsx';
+import AdminLayout from './components/admin/AdminLayout';
+import AdminDashboard from './components/admin/AdminDashboard';
+import UserManagement from './components/admin/UserManagement';
+import PendingBeverages from './components/admin/PendingBeverages';
+import AuditLogs from './components/admin/AuditLogs';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -54,6 +59,12 @@ function App() {
                 <Route path="/status" element={<StatusPage />} />
                 <Route path="/beverages" element={<BeveragesPage />} />
                 <Route path="/beverages/:id" element={<BeverageDetailPage />} />
+
+                {/* Admin Routes */}
+                <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
+                <Route path="/admin/users" element={<AdminLayout><UserManagement /></AdminLayout>} />
+                <Route path="/admin/beverages/pending" element={<AdminLayout><PendingBeverages /></AdminLayout>} />
+                <Route path="/admin/audit-logs" element={<AdminLayout><AuditLogs /></AdminLayout>} />
               </Routes>
             </main>
             <Footer />

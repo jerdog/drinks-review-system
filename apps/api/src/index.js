@@ -11,6 +11,7 @@ import socialRoutes from './routes/social.js';
 import uploadRoutes from './routes/upload.js';
 import venueRoutes from './routes/venues.js';
 import notificationRoutes from './routes/notifications.js';
+import adminRoutes from './routes/admin.js';
 
 // Import middleware
 import { authenticateToken, optionalAuth } from './middleware/auth.js';
@@ -84,6 +85,9 @@ app.register(venueRoutes, { prefix: '/venues' });
 
 // Notification routes
 app.register(notificationRoutes, { prefix: '/notifications' });
+
+// Admin routes
+app.register(adminRoutes, { prefix: '/admin' });
 
 // Health check
 app.get('/health', async (request, reply) => {
