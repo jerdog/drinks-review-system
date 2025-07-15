@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { createNotification } from './notifications.js';
 
 const prisma = new PrismaClient();
 
@@ -66,16 +67,14 @@ export default async function socialRoutes(fastify, options) {
       });
 
       // Create notification for followed user
-      await prisma.notification.create({
+      await createNotification({
+        userId: userId,
+        type: 'follow',
+        title: 'New Follower',
+        message: `${currentUser.username || 'Someone'} started following you`,
         data: {
-          type: 'follow',
-          title: 'New Follower',
-          message: `${currentUser.username || 'Someone'} started following you`,
-          userId: userId,
-          data: {
-            followerId: currentUser.userId,
-            followerUsername: currentUser.username
-          }
+          followerId: currentUser.userId,
+          followerUsername: currentUser.username
         }
       });
 
@@ -200,19 +199,17 @@ export default async function socialRoutes(fastify, options) {
         }
       });
 
-      // Create notification for review author (if not own review)
+      // Create notification for review author (if not liking own review)
       if (review.userId !== currentUser.userId) {
-        await prisma.notification.create({
+        await createNotification({
+          userId: review.userId,
+          type: 'like',
+          title: 'New Like',
+          message: `${currentUser.username || 'Someone'} liked your review`,
           data: {
-            type: 'like',
-            title: 'New Like',
-            message: `${currentUser.username || 'Someone'} liked your review`,
-            userId: review.userId,
-            data: {
-              likerId: currentUser.userId,
-              likerUsername: currentUser.username,
-              reviewId: reviewId
-            }
+            likerId: currentUser.userId,
+            likerUsername: currentUser.username,
+            reviewId: reviewId
           }
         });
       }
@@ -283,7 +280,7 @@ export default async function socialRoutes(fastify, options) {
     }
   });
 
-  // Comment on review
+  // Create comment
   fastify.post('/comment/:reviewId', async (request, reply) => {
     try {
       const { reviewId } = request.params;
@@ -301,13 +298,6 @@ export default async function socialRoutes(fastify, options) {
         return reply.code(400).send({
           success: false,
           message: 'Comment content is required'
-        });
-      }
-
-      if (content.length > 1000) {
-        return reply.code(400).send({
-          success: false,
-          message: 'Comment too long (max 1000 characters)'
         });
       }
 
@@ -342,152 +332,82 @@ export default async function socialRoutes(fastify, options) {
         }
       });
 
-      // Create notification for review author (if not own review)
+      // Create notification for review author (if not commenting on own review)
       if (review.userId !== currentUser.userId) {
-        await prisma.notification.create({
+        await createNotification({
+          userId: review.userId,
+          type: 'comment',
+          title: 'New Comment',
+          message: `${currentUser.username || 'Someone'} commented on your review`,
           data: {
-            type: 'comment',
-            title: 'New Comment',
-            message: `${currentUser.username || 'Someone'} commented on your review`,
-            userId: review.userId,
-            data: {
-              commenterId: currentUser.userId,
-              commenterUsername: currentUser.username,
-              reviewId: reviewId,
-              commentId: comment.id
-            }
+            commenterId: currentUser.userId,
+            commenterUsername: currentUser.username,
+            reviewId: reviewId,
+            commentId: comment.id
           }
         });
       }
 
-      return reply.code(201).send({
+      return reply.send({
         success: true,
-        message: 'Comment added successfully',
-        comment
+        message: 'Comment created successfully',
+        data: comment
       });
     } catch (error) {
       console.error('Comment error:', error);
       return reply.code(500).send({
         success: false,
-        message: 'Failed to add comment'
+        message: 'Failed to create comment'
       });
     }
   });
 
-  // Get user's followers
-  fastify.get('/followers/:userId', async (request, reply) => {
+  // Get comments for a review
+  fastify.get('/comments/:reviewId', async (request, reply) => {
     try {
-      const { userId } = request.params;
+      const { reviewId } = request.params;
       const { page = 1, limit = 20 } = request.query;
-      const skip = (page - 1) * limit;
+      const skip = (parseInt(page) - 1) * parseInt(limit);
+      const take = parseInt(limit);
 
-      // Check if user exists
-      const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { id: true, username: true, displayName: true }
-      });
-
-      if (!user) {
-        return reply.code(404).send({
-          success: false,
-          message: 'User not found'
-        });
-      }
-
-      const [followers, total] = await Promise.all([
-        prisma.follows.findMany({
-          where: { followingId: userId },
+      const [comments, total] = await Promise.all([
+        prisma.comment.findMany({
+          where: { reviewId },
           include: {
-            follower: {
+            user: {
               select: { id: true, username: true, displayName: true, avatar: true }
             }
           },
+          orderBy: { createdAt: 'desc' },
           skip,
-          take: parseInt(limit),
-          orderBy: { createdAt: 'desc' }
+          take
         }),
-        prisma.follows.count({
-          where: { followingId: userId }
-        })
+        prisma.comment.count({ where: { reviewId } })
       ]);
+
+      const totalPages = Math.ceil(total / take);
 
       return reply.send({
         success: true,
-        followers: followers.map(f => f.follower),
+        data: comments,
         pagination: {
           page: parseInt(page),
-          limit: parseInt(limit),
+          limit: take,
           total,
-          pages: Math.ceil(total / limit)
+          totalPages
         }
       });
     } catch (error) {
-      console.error('Get followers error:', error);
+      console.error('Get comments error:', error);
       return reply.code(500).send({
         success: false,
-        message: 'Failed to get followers'
+        message: 'Failed to fetch comments'
       });
     }
   });
 
-  // Get user's following
-  fastify.get('/following/:userId', async (request, reply) => {
-    try {
-      const { userId } = request.params;
-      const { page = 1, limit = 20 } = request.query;
-      const skip = (page - 1) * limit;
-
-      // Check if user exists
-      const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { id: true, username: true, displayName: true }
-      });
-
-      if (!user) {
-        return reply.code(404).send({
-          success: false,
-          message: 'User not found'
-        });
-      }
-
-      const [following, total] = await Promise.all([
-        prisma.follows.findMany({
-          where: { followerId: userId },
-          include: {
-            following: {
-              select: { id: true, username: true, displayName: true, avatar: true }
-            }
-          },
-          skip,
-          take: parseInt(limit),
-          orderBy: { createdAt: 'desc' }
-        }),
-        prisma.follows.count({
-          where: { followerId: userId }
-        })
-      ]);
-
-      return reply.send({
-        success: true,
-        following: following.map(f => f.following),
-        pagination: {
-          page: parseInt(page),
-          limit: parseInt(limit),
-          total,
-          pages: Math.ceil(total / limit)
-        }
-      });
-    } catch (error) {
-      console.error('Get following error:', error);
-      return reply.code(500).send({
-        success: false,
-        message: 'Failed to get following'
-      });
-    }
-  });
-
-  // Check if current user is following another user
-  fastify.get('/follow/check/:userId', async (request, reply) => {
+  // Check follow status
+  fastify.get('/follow/:userId', async (request, reply) => {
     try {
       const { userId } = request.params;
       const currentUser = request.user;
@@ -499,7 +419,7 @@ export default async function socialRoutes(fastify, options) {
         });
       }
 
-      const isFollowing = await prisma.follows.findUnique({
+      const follow = await prisma.follows.findUnique({
         where: {
           followerId_followingId: {
             followerId: currentUser.userId,
@@ -510,10 +430,10 @@ export default async function socialRoutes(fastify, options) {
 
       return reply.send({
         success: true,
-        isFollowing: !!isFollowing
+        data: { isFollowing: !!follow }
       });
     } catch (error) {
-      console.error('Check follow error:', error);
+      console.error('Check follow status error:', error);
       return reply.code(500).send({
         success: false,
         message: 'Failed to check follow status'
@@ -521,8 +441,8 @@ export default async function socialRoutes(fastify, options) {
     }
   });
 
-  // Check if current user has liked a review
-  fastify.get('/like/check/:reviewId', async (request, reply) => {
+  // Check like status
+  fastify.get('/like/:reviewId', async (request, reply) => {
     try {
       const { reviewId } = request.params;
       const currentUser = request.user;
@@ -534,7 +454,7 @@ export default async function socialRoutes(fastify, options) {
         });
       }
 
-      const hasLiked = await prisma.like.findUnique({
+      const like = await prisma.like.findUnique({
         where: {
           userId_reviewId: {
             userId: currentUser.userId,
@@ -545,10 +465,10 @@ export default async function socialRoutes(fastify, options) {
 
       return reply.send({
         success: true,
-        hasLiked: !!hasLiked
+        data: { isLiked: !!like }
       });
     } catch (error) {
-      console.error('Check like error:', error);
+      console.error('Check like status error:', error);
       return reply.code(500).send({
         success: false,
         message: 'Failed to check like status'

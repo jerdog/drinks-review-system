@@ -4,6 +4,8 @@ import { useAuth } from '../contexts/AuthContext';
 import LikeButton from '../components/LikeButton';
 import CommentForm from '../components/CommentForm';
 import CommentList from '../components/CommentList';
+import PhotoGallery from '../components/PhotoGallery';
+import PhotoUpload from '../components/PhotoUpload';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
@@ -11,6 +13,8 @@ const ReviewCard = ({ review, onCommentAdded }) => {
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState(review.comments || []);
   const [loadingComments, setLoadingComments] = useState(false);
+  const [photos, setPhotos] = useState(review.photos || []);
+  const [showPhotoUpload, setShowPhotoUpload] = useState(false);
 
   const handleCommentAdded = (newComment) => {
     setComments(prev => [newComment, ...prev]);
@@ -19,8 +23,34 @@ const ReviewCard = ({ review, onCommentAdded }) => {
     }
   };
 
+  const handlePhotoUploadSuccess = (uploadedPhotos) => {
+    setPhotos(prev => [...prev, ...uploadedPhotos]);
+  };
+
+  const handlePhotoDelete = async (photoId) => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${API_URL}/upload/photos/${photoId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        setPhotos(prev => prev.filter(photo => photo.id !== photoId));
+      }
+    } catch (error) {
+      console.error('Failed to delete photo:', error);
+    }
+  };
+
   const toggleComments = () => {
     setShowComments(!showComments);
+  };
+
+  const togglePhotoUpload = () => {
+    setShowPhotoUpload(!showPhotoUpload);
   };
 
   return (
@@ -36,7 +66,7 @@ const ReviewCard = ({ review, onCommentAdded }) => {
                 const isYellow = i < review.rating;
                 return (
                   <span
-                    key={`star-${i}`}
+                    key={`star-${review.id}-${i}`}
                     className={`text-sm ${isYellow ? 'text-yellow-500' : 'text-gray-300'}`}
                     style={{ color: isYellow ? '#f59e0b' : '#d1d5db' }}
                   >
@@ -63,6 +93,45 @@ const ReviewCard = ({ review, onCommentAdded }) => {
       {review.notes && (
         <p className="text-gray-700 text-sm mb-3">{review.notes}</p>
       )}
+
+      {/* Photos section */}
+      {photos.length > 0 && (
+        <div className="mb-4">
+          <PhotoGallery
+            photos={photos}
+            onDeletePhoto={handlePhotoDelete}
+            showDelete={true}
+            className="mb-3"
+          />
+        </div>
+      )}
+
+      {/* Photo upload section */}
+      <div className="border-t pt-3 mb-3">
+        <div className="flex items-center justify-between mb-3">
+          <button
+            type="button"
+            onClick={togglePhotoUpload}
+            className="text-sm text-gray-600 hover:text-gray-800 flex items-center gap-1"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            {photos.length > 0 ? `${photos.length} photo${photos.length !== 1 ? 's' : ''}` : 'Add photos'}
+          </button>
+        </div>
+
+        {showPhotoUpload && (
+          <div className="mb-4">
+            <PhotoUpload
+              reviewId={review.id}
+              onUploadSuccess={handlePhotoUploadSuccess}
+              onUploadError={(error) => console.error('Upload error:', error)}
+              maxFiles={5}
+            />
+          </div>
+        )}
+      </div>
 
       {/* Comments section */}
       <div className="border-t pt-3 mt-3">
@@ -103,6 +172,8 @@ const ReviewForm = ({ beverageId, onReviewCreated }) => {
   const [isPublic, setIsPublic] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [createdReviewId, setCreatedReviewId] = useState(null);
+  const [showPhotoUpload, setShowPhotoUpload] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -136,6 +207,7 @@ const ReviewForm = ({ beverageId, onReviewCreated }) => {
       }
 
       const data = await res.json();
+      setCreatedReviewId(data.review.id);
       onReviewCreated(data.review);
 
       // Reset form
@@ -145,11 +217,21 @@ const ReviewForm = ({ beverageId, onReviewCreated }) => {
       setServingType('');
       setIsAnonymous(false);
       setIsPublic(true);
+      setShowPhotoUpload(true);
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePhotoUploadSuccess = (uploadedPhotos) => {
+    // Photos are automatically associated with the review via the API
+    console.log('Photos uploaded successfully:', uploadedPhotos);
+  };
+
+  const handlePhotoUploadError = (error) => {
+    console.error('Photo upload error:', error);
   };
 
   if (!user) {
@@ -163,7 +245,7 @@ const ReviewForm = ({ beverageId, onReviewCreated }) => {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6 mb-6">
+    <div className="bg-white rounded-lg shadow p-6 mb-6">
       <h3 className="text-lg font-semibold mb-4">Write a Review</h3>
 
       {error && (
@@ -172,100 +254,122 @@ const ReviewForm = ({ beverageId, onReviewCreated }) => {
         </div>
       )}
 
-      <div className="mb-4">
-        <label htmlFor="rating" className="block text-sm font-medium mb-2">Rating</label>
-        <div className="flex gap-1">
-          {[1, 2, 3, 4, 5].map(star => (
-            <button
-              key={star}
-              type="button"
-              onClick={() => {
-                setRating(star);
-              }}
-              className={`text-2xl ${star <= rating ? 'text-yellow-500' : 'text-gray-300'}`}
-              aria-label={`Rate ${star} star${star !== 1 ? 's' : ''}`}
+      <form onSubmit={handleSubmit}>
+        <div className="mb-4">
+          <label htmlFor="rating" className="block text-sm font-medium mb-2">Rating</label>
+          <div className="flex gap-1">
+            {[1, 2, 3, 4, 5].map(star => (
+              <button
+                key={star}
+                type="button"
+                onClick={() => {
+                  setRating(star);
+                }}
+                className={`text-2xl ${star <= rating ? 'text-yellow-500' : 'text-gray-300'}`}
+                aria-label={`Rate ${star} star${star !== 1 ? 's' : ''}`}
+              >
+                ★
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="mb-4">
+          <label htmlFor="notes" className="block text-sm font-medium mb-2">Tasting Notes</label>
+          <textarea
+            id="notes"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            rows={3}
+            placeholder="Share your thoughts about this beverage..."
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div>
+            <label htmlFor="price" className="block text-sm font-medium mb-2">Price (optional)</label>
+            <input
+              id="price"
+              type="number"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              placeholder="0.00"
+              step="0.01"
+              min="0"
+            />
+          </div>
+          <div>
+            <label htmlFor="servingType" className="block text-sm font-medium mb-2">Serving Type</label>
+            <select
+              id="servingType"
+              value={servingType}
+              onChange={(e) => setServingType(e.target.value)}
+              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
-              ★
-            </button>
-          ))}
+              <option value="">Select type</option>
+              <option value="bottle">Bottle</option>
+              <option value="glass">Glass</option>
+              <option value="shot">Shot</option>
+            </select>
+          </div>
         </div>
-      </div>
 
-      <div className="mb-4">
-        <label htmlFor="notes" className="block text-sm font-medium mb-2">Tasting Notes</label>
-        <textarea
-          id="notes"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
-          rows={3}
-          placeholder="Share your thoughts about this beverage..."
-        />
-      </div>
+        <div className="flex gap-4 mb-4">
+          <label className="flex items-center">
+            <input
+              type="checkbox"
+              checked={isAnonymous}
+              onChange={(e) => setIsAnonymous(e.target.checked)}
+              className="mr-2"
+            />
+            <span className="text-sm">Post anonymously</span>
+          </label>
+          <label className="flex items-center">
+            <input
+              type="checkbox"
+              checked={isPublic}
+              onChange={(e) => setIsPublic(e.target.checked)}
+              className="mr-2"
+            />
+            <span className="text-sm">Make review public</span>
+          </label>
+        </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-        <div>
-          <label htmlFor="price" className="block text-sm font-medium mb-2">Price (optional)</label>
-          <input
-            id="price"
-            type="number"
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-            className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
-            placeholder="0.00"
-            step="0.01"
-            min="0"
+        <button
+          type="submit"
+          disabled={loading}
+          className={`w-full py-2 px-4 rounded-lg font-medium transition-colors ${
+            loading
+              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              : 'bg-primary-600 text-white hover:bg-primary-700'
+          }`}
+        >
+          {loading ? 'Posting...' : 'Post Review'}
+        </button>
+      </form>
+
+      {/* Photo upload section - shown after review creation */}
+      {createdReviewId && showPhotoUpload && (
+        <div className="mt-6 pt-6 border-t">
+          <h4 className="text-md font-medium mb-4">Add Photos to Your Review</h4>
+          <PhotoUpload
+            reviewId={createdReviewId}
+            onUploadSuccess={handlePhotoUploadSuccess}
+            onUploadError={handlePhotoUploadError}
+            maxFiles={5}
           />
-        </div>
-        <div>
-          <label htmlFor="servingType" className="block text-sm font-medium mb-2">Serving Type</label>
-          <select
-            id="servingType"
-            value={servingType}
-            onChange={(e) => setServingType(e.target.value)}
-            className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+          <button
+            type="button"
+            onClick={() => setShowPhotoUpload(false)}
+            className="mt-4 text-sm text-gray-600 hover:text-gray-800"
           >
-            <option value="">Select type</option>
-            <option value="bottle">Bottle</option>
-            <option value="glass">Glass</option>
-            <option value="shot">Shot</option>
-          </select>
+            Skip photo upload
+          </button>
         </div>
-      </div>
-
-      <div className="flex gap-4 mb-4">
-        <label className="flex items-center">
-          <input
-            type="checkbox"
-            checked={isAnonymous}
-            onChange={(e) => setIsAnonymous(e.target.checked)}
-            className="mr-2"
-          />
-          <span className="text-sm">Post anonymously</span>
-        </label>
-        <label className="flex items-center">
-          <input
-            type="checkbox"
-            checked={isPublic}
-            onChange={(e) => setIsPublic(e.target.checked)}
-            className="mr-2"
-          />
-          <span className="text-sm">Make review public</span>
-        </label>
-      </div>
-
-      <button
-        type="submit"
-        disabled={loading}
-        className={`w-full py-2 px-4 rounded-lg font-medium transition-colors ${
-          loading
-            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            : 'bg-primary-600 text-white hover:bg-primary-700'
-        }`}
-      >
-        {loading ? 'Posting...' : 'Post Review'}
-      </button>
-    </form>
+      )}
+    </div>
   );
 };
 

@@ -8,6 +8,9 @@ import userRoutes from './routes/users.js';
 import * as beverageRoutes from './routes/beverages.js';
 import * as reviewRoutes from './routes/reviews.js';
 import socialRoutes from './routes/social.js';
+import uploadRoutes from './routes/upload.js';
+import venueRoutes from './routes/venues.js';
+import notificationRoutes from './routes/notifications.js';
 
 // Import middleware
 import { authenticateToken, optionalAuth } from './middleware/auth.js';
@@ -72,6 +75,15 @@ app.post('/reviews/:id/like', { preHandler: authenticateToken }, reviewRoutes.to
 
 // Social routes
 app.register(socialRoutes, { prefix: '/social' });
+
+// Upload routes
+app.register(uploadRoutes, { prefix: '/upload' });
+
+// Venue routes
+app.register(venueRoutes, { prefix: '/venues' });
+
+// Notification routes
+app.register(notificationRoutes, { prefix: '/notifications' });
 
 // Health check
 app.get('/health', async (request, reply) => {
