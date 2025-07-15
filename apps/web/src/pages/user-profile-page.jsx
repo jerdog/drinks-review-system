@@ -5,7 +5,7 @@ import FollowButton from '../components/FollowButton';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
-const ProfilePage = () => {
+const UserProfilePage = () => {
   const { username } = useParams();
   const { user: currentUser } = useAuth();
   const [user, setUser] = useState(null);
@@ -211,4 +211,4 @@ const ProfilePage = () => {
   );
 };
 
-export default ProfilePage;
+export default UserProfilePage;

@@ -1,10 +1,28 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import LikeButton from '../components/LikeButton';
+import CommentForm from '../components/CommentForm';
+import CommentList from '../components/CommentList';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
-const ReviewCard = ({ review }) => {
+const ReviewCard = ({ review, onCommentAdded }) => {
+  const [showComments, setShowComments] = useState(false);
+  const [comments, setComments] = useState(review.comments || []);
+  const [loadingComments, setLoadingComments] = useState(false);
+
+  const handleCommentAdded = (newComment) => {
+    setComments(prev => [newComment, ...prev]);
+    if (onCommentAdded) {
+      onCommentAdded(newComment);
+    }
+  };
+
+  const toggleComments = () => {
+    setShowComments(!showComments);
+  };
+
   return (
     <div className="bg-white rounded-lg shadow p-4 mb-4">
       <div className="flex items-center gap-3 mb-2">
@@ -18,7 +36,7 @@ const ReviewCard = ({ review }) => {
                 const isYellow = i < review.rating;
                 return (
                   <span
-                    key={i}
+                    key={`star-${i}`}
                     className={`text-sm ${isYellow ? 'text-yellow-500' : 'text-gray-300'}`}
                     style={{ color: isYellow ? '#f59e0b' : '#d1d5db' }}
                   >
@@ -34,13 +52,43 @@ const ReviewCard = ({ review }) => {
             {review.servingType && ` · ${review.servingType}`}
           </div>
         </div>
-        <div className="text-xs text-gray-400">
-          {review._count?.likes || 0} likes
+        <div className="flex items-center gap-2">
+          <LikeButton
+            reviewId={review.id}
+            initialLikes={review._count?.likes || 0}
+          />
         </div>
       </div>
+
       {review.notes && (
-        <p className="text-gray-700 text-sm">{review.notes}</p>
+        <p className="text-gray-700 text-sm mb-3">{review.notes}</p>
       )}
+
+      {/* Comments section */}
+      <div className="border-t pt-3 mt-3">
+        <div className="flex items-center justify-between mb-3">
+          <button
+            type="button"
+            onClick={toggleComments}
+            className="text-sm text-gray-600 hover:text-gray-800 flex items-center gap-1"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+            {review._count?.comments || 0} comment{(review._count?.comments || 0) !== 1 ? 's' : ''}
+          </button>
+        </div>
+
+        {showComments && (
+          <div className="space-y-4">
+            <CommentForm
+              reviewId={review.id}
+              onCommentAdded={handleCommentAdded}
+            />
+            <CommentList comments={comments} />
+          </div>
+        )}
+      </div>
     </div>
   );
 };
@@ -125,7 +173,7 @@ const ReviewForm = ({ beverageId, onReviewCreated }) => {
       )}
 
       <div className="mb-4">
-        <label className="block text-sm font-medium mb-2">Rating</label>
+        <label htmlFor="rating" className="block text-sm font-medium mb-2">Rating</label>
         <div className="flex gap-1">
           {[1, 2, 3, 4, 5].map(star => (
             <button
@@ -144,8 +192,9 @@ const ReviewForm = ({ beverageId, onReviewCreated }) => {
       </div>
 
       <div className="mb-4">
-        <label className="block text-sm font-medium mb-2">Tasting Notes</label>
+        <label htmlFor="notes" className="block text-sm font-medium mb-2">Tasting Notes</label>
         <textarea
+          id="notes"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -156,8 +205,9 @@ const ReviewForm = ({ beverageId, onReviewCreated }) => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div>
-          <label className="block text-sm font-medium mb-2">Price (optional)</label>
+          <label htmlFor="price" className="block text-sm font-medium mb-2">Price (optional)</label>
           <input
+            id="price"
             type="number"
             value={price}
             onChange={(e) => setPrice(e.target.value)}
@@ -168,8 +218,9 @@ const ReviewForm = ({ beverageId, onReviewCreated }) => {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-2">Serving Type</label>
+          <label htmlFor="servingType" className="block text-sm font-medium mb-2">Serving Type</label>
           <select
+            id="servingType"
             value={servingType}
             onChange={(e) => setServingType(e.target.value)}
             className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -206,7 +257,11 @@ const ReviewForm = ({ beverageId, onReviewCreated }) => {
       <button
         type="submit"
         disabled={loading}
-        className="bg-primary-600 text-white px-4 py-2 rounded hover:bg-primary-700 disabled:opacity-50"
+        className={`w-full py-2 px-4 rounded-lg font-medium transition-colors ${
+          loading
+            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            : 'bg-primary-600 text-white hover:bg-primary-700'
+        }`}
       >
         {loading ? 'Posting...' : 'Post Review'}
       </button>
@@ -221,11 +276,7 @@ const BeverageDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    fetchBeverage();
-  }, [id]);
-
-  const fetchBeverage = async () => {
+  const fetchBeverage = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
@@ -241,7 +292,11 @@ const BeverageDetailPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    fetchBeverage();
+  }, [fetchBeverage]);
 
   const handleReviewCreated = (newReview) => {
     setReviews(prev => [newReview, ...prev]);
@@ -264,34 +319,37 @@ const BeverageDetailPage = () => {
 
   return (
     <div className="max-w-3xl mx-auto py-8 px-4">
-      <Link to="/beverages" className="text-primary-600 hover:underline mb-4 inline-block">
-        ← Back to Beverages
-      </Link>
-
+      {/* Beverage Header */}
       <div className="bg-white rounded-lg shadow p-6 mb-6">
-        <h1 className="text-2xl font-bold mb-2">{beverage.name}</h1>
-        <div className="text-gray-600 mb-4">
-          {beverage.type} {beverage.region && `· ${beverage.region}`}
-          {beverage.varietal && ` · ${beverage.varietal}`}
-          {beverage.abv && ` · ${beverage.abv}% ABV`}
-          {beverage.vintage && ` · ${beverage.vintage}`}
-        </div>
-        {beverage.description && (
-          <p className="text-gray-700 mb-4">{beverage.description}</p>
-        )}
-        <div className="text-sm text-gray-500">
-          Category: {beverage.category?.name || '—'}
+        <div className="flex items-start gap-4">
+          <div className="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center text-2xl font-bold text-gray-600">
+            {beverage?.name?.charAt(0) || '?'}
+          </div>
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold mb-2">{beverage?.name}</h1>
+            {beverage?.description && (
+              <p className="text-gray-600 mb-3">{beverage.description}</p>
+            )}
+            <div className="flex flex-wrap gap-4 text-sm text-gray-500">
+              {beverage?.type && <span>Type: {beverage.type}</span>}
+              {beverage?.region && <span>Region: {beverage.region}</span>}
+              {beverage?.varietal && <span>Varietal: {beverage.varietal}</span>}
+              {beverage?.abv && <span>ABV: {beverage.abv}%</span>}
+            </div>
+          </div>
         </div>
       </div>
 
+      {/* Review Form */}
       <ReviewForm beverageId={id} onReviewCreated={handleReviewCreated} />
 
-      <div>
-        <h2 className="text-xl font-semibold mb-4">
-          Reviews ({reviews.length})
-        </h2>
+      {/* Reviews */}
+      <div className="space-y-4">
+        <h2 className="text-xl font-semibold">Reviews ({reviews.length})</h2>
         {reviews.length === 0 ? (
-          <p className="text-gray-500 text-center py-8">No reviews yet. Be the first to review!</p>
+          <div className="text-center py-8 text-gray-500">
+            No reviews yet. Be the first to review this beverage!
+          </div>
         ) : (
           reviews.map(review => (
             <ReviewCard key={review.id} review={review} />

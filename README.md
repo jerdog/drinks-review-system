@@ -1,64 +1,107 @@
 # Wine & Cocktail Review Platform
 
-A modern web application for reviewing wines and cocktails, similar to Untappd but focused on wine and cocktail enthusiasts.
+A modern, social platform for wine and cocktail enthusiasts to discover, review, and share their beverage experiences. Built with React, Fastify, Prisma, and PostgreSQL.
 
-## Features
+## 🍷 Features
 
-- **Social Review Platform**: Rate and review wines, cocktails, and liquors
-- **Social Features**: Follow users, like/comment on reviews, share reviews
-- **Gamification**: Badges, achievements, leaderboards
-- **Check-ins**: Track where you had your drinks
-- **Discovery**: Search and discover new beverages
-- **Mobile-First**: Responsive design with future React Native mobile app
-- **Modern Tech Stack**: Fastify API, PostgreSQL (Neon), Tailwind CSS, React frontend
+### ✅ Phase 1: Authentication System (Complete)
+- **Backend**: JWT authentication with bcrypt password hashing
+- **Frontend**: Login/register pages with AuthContext
+- **Features**: User registration, login, logout, profile management
+- **Test Credentials**: `test2@example.com` / `password123`
 
-## Tech Stack
+### ✅ Phase 2: Beverage & Review System (Complete)
+- **Backend**: Complete beverage and review API with full CRUD operations
+- **Frontend**: Beverage listing, detail pages, review creation and display
+- **Features**:
+  - Search and filter beverages
+  - Create reviews with ratings (1-5 stars)
+  - View reviews with proper star display
+  - Responsive design with Tailwind CSS
+- **API Endpoints:**
+  - `GET /beverages` - List beverages (with filters, pagination)
+  - `GET /beverages/:id` - Get beverage details
+  - `GET /beverages/categories` - List beverage categories
+  - `GET /beverages/search` - Search beverages
+  - `POST /beverages` - Suggest or create beverage (auth required)
+  - `PUT /beverages/:id` - Update beverage (admin only)
+  - `DELETE /beverages/:id` - Delete beverage (admin only)
+  - `GET /reviews` - List reviews (with filters, pagination)
+  - `GET /reviews/:id` - Get review details
+  - `POST /reviews` - Create review (auth required)
+  - `PUT /reviews/:id` - Update review (auth required)
+  - `DELETE /reviews/:id` - Delete review (auth required)
+  - `GET /users/:userId/reviews` - List reviews by user
+  - `POST /reviews/:id/like` - Like/unlike a review (auth required)
 
-### Backend
-- **API**: Fastify 5.x (REST API)
-- **Database**: PostgreSQL with Prisma ORM (hosted on Neon)
-- **Authentication**: JWT tokens with bcrypt password hashing
-- **File Storage**: Cloudflare Images / AWS S3 (planned)
-- **Caching**: Redis / Cloudflare (planned)
-- **Image Processing**: Sharp for optimization (planned)
+### ✅ Phase 3: Social Features (Complete)
+- **Backend**: Complete social API with follow, like, and comment functionality
+- **Frontend**: Interactive social components with real-time updates
+- **Features**:
+  - Follow/unfollow users with FollowButton component
+  - Like/unlike reviews with LikeButton component
+  - Comment on reviews with CommentForm and CommentList
+  - User profiles with social statistics
+  - Real-time UI updates for social actions
+  - Notification system for social interactions
+- **API Endpoints:**
+  - `POST /social/follow/:userId` - Follow a user
+  - `DELETE /social/follow/:userId` - Unfollow a user
+  - `GET /social/follow/check/:userId` - Check follow status
+  - `GET /social/followers/:userId` - Get user's followers
+  - `GET /social/following/:userId` - Get user's following
+  - `POST /social/like/:reviewId` - Like a review
+  - `DELETE /social/like/:reviewId` - Unlike a review
+  - `GET /social/like/check/:reviewId` - Check like status
+  - `POST /social/comment/:reviewId` - Comment on a review
+- **Components**:
+  - `LikeButton` - Interactive like/unlike with heart icon
+  - `FollowButton` - Follow/unfollow with loading states
+  - `CommentForm` - Comment creation with validation
+  - `CommentList` - Comment display with user avatars
+  - `UserProfilePage` - Enhanced user profiles with social features
+
+### 🔄 Phase 4: Advanced Features (In Progress)
+- User profiles and following system
+- Like/unlike reviews
+- Comments on reviews
+- Activity feed
+- Notifications
+
+### 📋 Phase 5: Advanced Features (Planned)
+- Photo uploads for reviews
+- Venue check-ins
+- Advanced search and filtering
+- Admin dashboard
+- Mobile app
+
+## 🛠 Tech Stack
 
 ### Frontend
-- **Framework**: React 18 with Vite
-- **CSS Framework**: Tailwind CSS
-- **State Management**: React Context API
-- **Routing**: React Router DOM
-- **Icons**: Font Awesome
+- **React 18** with Vite
+- **React Router** for navigation
+- **Tailwind CSS** for styling
+- **React Hot Toast** for notifications
+- **React Query** for data fetching
 
-### Mobile (Future)
-- **Framework**: React Native
-- **Navigation**: React Navigation
+### Backend
+- **Fastify** for API server
+- **Prisma ORM** for database operations
+- **PostgreSQL** (Neon) for database
+- **JWT** for authentication
+- **bcryptjs** for password hashing
 
-### DevOps
-- **CI/CD**: GitHub Actions
-- **Deployment**: Vercel / Netlify (frontend), Railway / Render (backend)
-- **Monitoring**: Sentry / LogRocket
+### Development Tools
+- **TypeScript** for type safety
+- **ESLint** for code linting
+- **Prettier** for code formatting
+- **Git** for version control
 
-## Project Structure
-
-```
-/
-├── apps/
-│   ├── web/                 # React frontend (Vite)
-│   └── api/                 # Fastify API
-├── packages/
-│   ├── types/               # Shared JavaScript types (JSDoc)
-│   ├── utils/               # Shared utilities
-│   └── database/            # Prisma schema and client
-├── docs/                    # Documentation
-└── scripts/                 # Development scripts
-```
-
-## Getting Started
+## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18+
-- npm (currently using npm for compatibility)
-- PostgreSQL (Neon account recommended)
+- Node.js 18+ and npm
+- PostgreSQL database (Neon account recommended)
 
 ### Development Setup
 
@@ -164,89 +207,108 @@ AWS_S3_BUCKET=...
 - `npm run seed` - Seed database with sample data
 - `npm run studio` - Open Prisma Studio
 
-## Current Status
+## Social Features Guide
 
-### ✅ Phase 1: Authentication System (Complete)
-- **Backend**: JWT authentication with bcrypt password hashing
-- **Frontend**: Login/register pages with AuthContext
-- **Features**: User registration, login, logout, profile management
-- **Test Credentials**: `test2@example.com` / `password123`
+### Following Users
+- Click the "Follow" button on any user's profile
+- The button will change to "Unfollow" when following
+- Users can't follow themselves
 
-### ✅ Phase 2: Beverage & Review System (Complete)
-- **Backend**: Complete beverage and review API with full CRUD operations
-- **Frontend**: Beverage listing, detail pages, review creation and display
-- **Features**:
-  - Search and filter beverages
-  - Create reviews with ratings (1-5 stars)
-  - View reviews with proper star display
-  - Responsive design with Tailwind CSS
-- **API Endpoints:**
-  - `GET /beverages` - List beverages (with filters, pagination)
-  - `GET /beverages/:id` - Get beverage details
-  - `GET /beverages/categories` - List beverage categories
-  - `GET /beverages/search` - Search beverages
-  - `POST /beverages` - Suggest or create beverage (auth required)
-  - `PUT /beverages/:id` - Update beverage (admin only)
-  - `DELETE /beverages/:id` - Delete beverage (admin only)
-  - `GET /reviews` - List reviews (with filters, pagination)
-  - `GET /reviews/:id` - Get review details
-  - `POST /reviews` - Create review (auth required)
-  - `PUT /reviews/:id` - Update review (auth required)
-  - `DELETE /reviews/:id` - Delete review (auth required)
-  - `GET /users/:userId/reviews` - List reviews by user
-  - `POST /reviews/:id/like` - Like/unlike a review (auth required)
+### Liking Reviews
+- Click the heart icon on any review to like it
+- The heart will fill with red when liked
+- Like count updates in real-time
 
-### 🔄 Phase 3: Social Features (In Progress)
-- User profiles and following system
-- Like/unlike reviews
-- Comments on reviews
-- Activity feed
-- Notifications
+### Commenting on Reviews
+- Click the comment icon to expand the comment section
+- Type your comment (max 1000 characters)
+- Click "Post Comment" to submit
+- Comments appear with user avatars and timestamps
 
-### 📋 Phase 4: Advanced Features (Planned)
-- Venue integration
-- Check-ins
-- Gamification (badges, achievements)
-- Mobile app (React Native)
-- Advanced search and recommendations
+### User Profiles
+- Visit `/profile/:username` to see user profiles
+- View user's reviews, bio, and location
+- See follow/unfollow button if not your own profile
+- Tabs for Reviews, Following, and Followers (coming soon)
+
+## API Documentation
+
+### Authentication Endpoints
+- `POST /auth/register` - Register new user
+- `POST /auth/login` - Login user
+- `GET /users/me` - Get current user profile
+
+### Social Endpoints
+- `POST /social/follow/:userId` - Follow a user
+- `DELETE /social/follow/:userId` - Unfollow a user
+- `GET /social/follow/check/:userId` - Check if following
+- `POST /social/like/:reviewId` - Like a review
+- `DELETE /social/like/:reviewId` - Unlike a review
+- `GET /social/like/check/:reviewId` - Check if liked
+- `POST /social/comment/:reviewId` - Comment on review
+
+### Beverage Endpoints
+- `GET /beverages` - List beverages with filters
+- `GET /beverages/:id` - Get beverage details
+- `POST /beverages` - Create new beverage (auth required)
+
+### Review Endpoints
+- `GET /reviews` - List reviews with filters
+- `POST /reviews` - Create review (auth required)
+- `PUT /reviews/:id` - Update review (auth required)
+- `DELETE /reviews/:id` - Delete review (auth required)
 
 ## Testing
 
-### Quick Test
-1. Visit http://localhost:3000/status
-2. Use the "Quick Login" button
-3. Test the various API endpoints
-4. Try creating reviews with different ratings
+### Test Credentials
+- **Email**: `test2@example.com`
+- **Password**: `password123`
 
 ### Manual Testing
 1. Register a new account or use test credentials
-2. Browse beverages at http://localhost:3000/beverages
-3. Click on a beverage to view details
-4. Create a review with rating and notes
-5. Verify the review displays correctly
+2. Browse beverages and create reviews
+3. Test social features:
+   - Follow other users
+   - Like reviews
+   - Comment on reviews
+4. Visit user profiles to see social interactions
 
 ## Troubleshooting
 
 ### Common Issues
-- **Database Connection**: Ensure `DATABASE_URL` is set correctly in all packages
-- **Prisma Client**: Run `npx prisma generate` in `packages/database` if you see initialization errors
-- **Authentication**: Check that JWT_SECRET is set and consistent
-- **CORS**: Ensure CORS_ORIGIN matches your frontend URL
 
-### Development Tips
-- Use the Status page (`/status`) for quick API testing
-- Check API logs for detailed error information
-- Use browser dev tools to inspect network requests
-- Restart servers after environment variable changes
+**API Server Won't Start**
+- Check if port 3001 is already in use
+- Kill existing process: `lsof -ti:3001 | xargs kill -9`
+- Restart API server
+
+**Database Connection Issues**
+- Verify DATABASE_URL in `.env` files
+- Check if database is accessible
+- Run `npm run generate` in packages/database
+
+**Frontend Build Issues**
+- Clear node_modules and reinstall: `rm -rf node_modules && npm install`
+- Check for TypeScript errors
+- Verify all environment variables are set
+
+**Social Features Not Working**
+- Ensure user is authenticated
+- Check browser console for API errors
+- Verify API server is running on port 3001
 
 ## Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Test thoroughly
+4. Add tests if applicable
 5. Submit a pull request
 
 ## License
 
 MIT License - see LICENSE file for details
+
+## Support
+
+For support, please open an issue on GitHub or contact the development team.

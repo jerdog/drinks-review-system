@@ -7,6 +7,7 @@ import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
 import * as beverageRoutes from './routes/beverages.js';
 import * as reviewRoutes from './routes/reviews.js';
+import socialRoutes from './routes/social.js';
 
 // Import middleware
 import { authenticateToken, optionalAuth } from './middleware/auth.js';
@@ -68,6 +69,9 @@ app.put('/reviews/:id', { preHandler: authenticateToken }, reviewRoutes.updateRe
 app.delete('/reviews/:id', { preHandler: authenticateToken }, reviewRoutes.deleteReview);
 app.get('/users/:userId/reviews', reviewRoutes.getUserReviews);
 app.post('/reviews/:id/like', { preHandler: authenticateToken }, reviewRoutes.toggleReviewLike);
+
+// Social routes
+app.register(socialRoutes, { prefix: '/social' });
 
 // Health check
 app.get('/health', async (request, reply) => {
