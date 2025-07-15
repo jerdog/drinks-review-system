@@ -1,6 +1,6 @@
-# Wine & Cocktail Review Platform
+# Wine, Cocktail, and Spirit Review Platform
 
-A modern, social platform for wine and cocktail enthusiasts to discover, review, and share their beverage experiences. Built with React, Fastify, Prisma, and PostgreSQL.
+A modern, social platform for wine, cocktail, and spirit enthusiasts to discover, review, and share their beverage experiences. Built with React, Fastify, Prisma, and PostgreSQL.
 
 ## 🍷 Features
 
@@ -14,7 +14,7 @@ A modern, social platform for wine and cocktail enthusiasts to discover, review,
 - **Backend**: Complete beverage and review API with full CRUD operations
 - **Frontend**: Beverage listing, detail pages, review creation and display
 - **Features**:
-  - Search and filter beverages
+  - Search and filter beverages (wines, cocktails, spirits)
   - Create reviews with ratings (1-5 stars)
   - View reviews with proper star display
   - Responsive design with Tailwind CSS

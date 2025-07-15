@@ -1,7 +1,7 @@
 {
   "name": "api",
-  "version": "0.2.0",
-  "description": "Fastify API for the wine and cocktail review platform",
+  "version": "0.3.0",
+  "description": "Fastify API for the wine, cocktail, and spirit review platform",
   "type": "module",
   "main": "src/index.js",
   "scripts": {

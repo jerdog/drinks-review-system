@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 /**
- * Footer component for the wine and cocktail review platform
+ * Footer component for the wine, cocktail, and spirit review platform
  * @returns {JSX.Element} The footer
  */
 function Footer() {
@@ -15,7 +15,7 @@ function Footer() {
           <div className="column">
             <h3 className="title is-4 has-text-light">🍷 WineCraft</h3>
             <p className="has-text-grey-light">
-              Discover, review, and share your favorite wines and cocktails with the world.
+              Discover, review, and share your favorite wines, cocktails, and spirits with the world.
             </p>
           </div>
 
@@ -89,7 +89,7 @@ function Footer() {
           </div>
           <div className="column has-text-right">
             <p className="has-text-grey-light">
-              Made with ❤️ for wine and cocktail enthusiasts
+              Made with ❤️ for wine, cocktail, and spirit enthusiasts
             </p>
           </div>
         </div>

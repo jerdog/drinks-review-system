@@ -1,7 +1,7 @@
 {
-  "name": "wine-cocktail-review-platform",
-  "version": "0.2.0",
-  "description": "A modern web application for reviewing wines and cocktails",
+  "name": "wine-cocktail-spirit-review-platform",
+  "version": "0.3.0",
+  "description": "A modern web application for reviewing wines, cocktails, and spirits",
   "private": true,
   "scripts": {
     "dev": "pnpm run --parallel dev",

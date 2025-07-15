@@ -1,4 +1,4 @@
-# TODO List - Wine & Cocktail Review Platform
+# TODO List - Wine, Cocktail, and Spirit Review Platform
 
 ## ✅ Phase 3: Social Features (COMPLETED)
 
@@ -290,6 +290,8 @@
 - [ ] Design mobile-specific UI/UX
 - [ ] Implement push notifications
 - [ ] Add offline functionality
+- [ ] Add camera integration for photos
+- [ ] Add location services for check-ins
 
 ### Advanced Features
 - [ ] Implement machine learning recommendations

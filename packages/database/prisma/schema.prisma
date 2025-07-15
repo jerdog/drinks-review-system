@@ -110,13 +110,13 @@ model BeverageCategory {
   @@map("beverage_categories")
 }
 
-// Beverages (wines, cocktails, liquors)
+// Beverages (wines, cocktails, spirits)
 model Beverage {
   id          String   @id @default(cuid())
   name        String
   slug        String   @unique
   description String?
-  type        String   // "wine", "cocktail", "liquor"
+  type        String   // "wine", "cocktail", "spirit"
   region      String?
   varietal    String?  // For wines
   abv         Float?   // Alcohol by volume

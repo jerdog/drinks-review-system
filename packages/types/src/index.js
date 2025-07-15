@@ -66,7 +66,7 @@
  * @property {string} name
  * @property {string} slug
  * @property {string} [description]
- * @property {'wine'|'cocktail'|'liquor'} type
+ * @property {'wine'|'cocktail'|'spirit'} type
  * @property {string} [region]
  * @property {string} [varietal]
  * @property {number} [abv]
@@ -294,7 +294,7 @@
  * @typedef {Object} CreateBeverageSuggestion
  * @property {string} name
  * @property {string} [description]
- * @property {'wine'|'cocktail'|'liquor'} type
+ * @property {'wine'|'cocktail'|'spirit'} type
  * @property {string} [region]
  * @property {string} [varietal]
  * @property {number} [abv]

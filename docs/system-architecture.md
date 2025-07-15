@@ -1,6 +1,6 @@
 # System Architecture Documentation
 
-This document provides comprehensive Mermaid diagrams showing how the Wine & Cocktail Review Platform functions, including the newly implemented social features.
+This document provides comprehensive Mermaid diagrams showing how the Wine, Cocktail, and Spirit Review Platform functions, including the newly implemented social features.
 
 ## 1. System Architecture Overview
 
@@ -411,4 +411,4 @@ graph LR
 - **Social Features**: Real-time UI updates with state management
 - **Deployment**: Development environment fully functional
 
-The system now provides a complete social platform for wine and cocktail enthusiasts with robust authentication, comprehensive beverage management, and engaging social features that encourage community interaction and content creation.
+The system now provides a complete social platform for wine, cocktail, and spirit enthusiasts with robust authentication, comprehensive beverage management, and engaging social features that encourage community interaction and content creation.

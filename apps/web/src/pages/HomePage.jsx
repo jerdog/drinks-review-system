@@ -16,10 +16,10 @@ function HomePage() {
         <div className="hero-body">
           <div className="container">
             <h1 className="title">
-              Wine & Cocktail Reviews
+              Wine, Cocktail, and Spirit Reviews
             </h1>
             <h2 className="subtitle">
-              Discover, review, and share your favorite wines and cocktails
+              Discover, review, and share your favorite wines, cocktails, and spirits
             </h2>
             <div className="buttons">
               {!isAuthenticated ? (
@@ -56,7 +56,7 @@ function HomePage() {
                       </span>
                       Discover Beverages
                     </h4>
-                    <p>Find new wines and cocktails based on your preferences and community recommendations.</p>
+                    <p>Find new wines, cocktails, and spirits based on your preferences and community recommendations.</p>
                   </div>
                 </div>
               </div>
@@ -205,125 +205,84 @@ function HomePage() {
         </div>
       </section>
 
-      {/* Leaderboard Section */}
+      {/* Call to Action Section */}
       <section className="section">
         <div className="container">
-          <div className="level">
-            <div className="level-left">
-              <div className="level-item">
-                <h2 className="title is-2">Top Reviewers</h2>
-              </div>
-            </div>
-            <div className="level-right">
-              <div className="level-item">
-                <Link to="/leaderboard" className="button is-primary">
-                  View Full Leaderboard
-                </Link>
-              </div>
+          <div className="has-text-centered">
+            <h2 className="title is-2">Join Our Community</h2>
+            <p className="subtitle is-5">
+              Start reviewing your favorite wines, cocktails, and spirits today. Connect with fellow enthusiasts and discover new favorites.
+            </p>
+            <div className="buttons is-centered">
+              {!isAuthenticated ? (
+                <>
+                  <Link to="/register" className="button is-primary is-large">
+                    Get Started
+                  </Link>
+                  <Link to="/search" className="button is-outlined is-primary is-large">
+                    Browse Reviews
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link to="/dashboard" className="button is-primary is-large">
+                    Go to Dashboard
+                  </Link>
+                  <Link to="/search" className="button is-outlined is-primary is-large">
+                    Browse Reviews
+                  </Link>
+                </>
+              )}
             </div>
           </div>
+        </div>
+      </section>
 
+      {/* Footer Section */}
+      <footer className="footer">
+        <div className="container">
           <div className="columns">
-            <div className="column is-8">
-              <div className="box">
-                <div className="table-container">
-                  <table className="table is-fullwidth">
-                    <thead>
-                      <tr>
-                        <th>Rank</th>
-                        <th>User</th>
-                        <th>Reviews</th>
-                        <th>Followers</th>
-                        <th>Points</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td><span className="tag is-warning is-medium">1</span></td>
-                        <td>
-                          <div className="media">
-                            <div className="media-left">
-                              <figure className="image is-32x32">
-                                <img className="is-rounded" src="https://bulma.io/images/placeholders/64x64.png" alt="User" />
-                              </figure>
-                            </div>
-                            <div className="media-content">
-                              <p className="title is-6">WineMaster</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td>247</td>
-                        <td>1,234</td>
-                        <td>8,950</td>
-                      </tr>
-                      <tr>
-                        <td><span className="tag is-light is-medium">2</span></td>
-                        <td>
-                          <div className="media">
-                            <div className="media-left">
-                              <figure className="image is-32x32">
-                                <img className="is-rounded" src="https://bulma.io/images/placeholders/64x64.png" alt="User" />
-                              </figure>
-                            </div>
-                            <div className="media-content">
-                              <p className="title is-6">CocktailQueen</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td>189</td>
-                        <td>987</td>
-                        <td>7,320</td>
-                      </tr>
-                      <tr>
-                        <td><span className="tag is-light is-medium">3</span></td>
-                        <td>
-                          <div className="media">
-                            <div className="media-left">
-                              <figure className="image is-32x32">
-                                <img className="is-rounded" src="https://bulma.io/images/placeholders/64x64.png" alt="User" />
-                              </figure>
-                            </div>
-                            <div className="media-content">
-                              <p className="title is-6">SpiritHunter</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td>156</td>
-                        <td>756</td>
-                        <td>6,890</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+            <div className="column">
+              <h3 className="title is-4">About Us</h3>
+              <p className="subtitle">Join thousands of wine, cocktail, and spirit enthusiasts</p>
+              <p>We're building the world's largest community of beverage enthusiasts. Share your experiences, discover new favorites, and connect with fellow connoisseurs.</p>
             </div>
-            <div className="column is-4">
-              <div className="box">
-                <h3 className="title is-4">Join the Community</h3>
-                <p className="mb-4">
-                  Start reviewing your favorite wines and cocktails today. Connect with fellow enthusiasts and discover new favorites.
-                </p>
-                <Link to="/login" className="button is-primary is-fullwidth">
-                  Get Started
-                </Link>
+            <div className="column">
+              <h3 className="title is-4">Quick Links</h3>
+              <ul>
+                <li><Link to="/search">Browse Reviews</Link></li>
+                <li><Link to="/register">Sign Up</Link></li>
+                <li><Link to="/login">Sign In</Link></li>
+                <li><Link to="/about">About</Link></li>
+              </ul>
+            </div>
+            <div className="column">
+              <h3 className="title is-4">Connect</h3>
+              <div className="buttons">
+                <a href="https://twitter.com" className="button is-small">
+                  <span className="icon">
+                    <i className="fab fa-twitter"></i>
+                  </span>
+                </a>
+                <a href="https://facebook.com" className="button is-small">
+                  <span className="icon">
+                    <i className="fab fa-facebook"></i>
+                  </span>
+                </a>
+                <a href="https://instagram.com" className="button is-small">
+                  <span className="icon">
+                    <i className="fab fa-instagram"></i>
+                  </span>
+                </a>
               </div>
             </div>
           </div>
+          <hr />
+          <div className="has-text-centered">
+            <p>Made with ❤️ for wine, cocktail, and spirit enthusiasts</p>
+          </div>
         </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="section has-background-light">
-        <div className="container has-text-centered">
-          <h3 className="title">Ready to start your journey?</h3>
-          <p className="subtitle">Join thousands of wine and cocktail enthusiasts</p>
-          {!isAuthenticated && (
-            <Link to="/register" className="button is-primary is-medium">
-              Create Account
-            </Link>
-          )}
-        </div>
-      </section>
+      </footer>
     </div>
   );
 }

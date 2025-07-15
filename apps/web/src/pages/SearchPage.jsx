@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 /**
- * Search page component for discovering wines and cocktails
+ * Search page component for discovering wines, cocktails, and spirits
  * @returns {JSX.Element} The search page
  */
 function SearchPage() {
@@ -18,7 +18,7 @@ function SearchPage() {
     <div className="container">
       <section className="section">
         <h1 className="title">Discover</h1>
-        <p className="subtitle">Find your next favorite wine or cocktail</p>
+        <p className="subtitle">Find your next favorite wine, cocktail, or spirit</p>
 
         <div className="box">
           <form onSubmit={handleSearch}>
@@ -27,7 +27,7 @@ function SearchPage() {
                 <input
                   className="input is-large"
                   type="text"
-                  placeholder="Search for wines, cocktails, or venues..."
+                  placeholder="Search for wines, cocktails, spirits, or venues..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -66,6 +66,13 @@ function SearchPage() {
                     Cocktails
                   </button>
                   <button
+                    className={`button ${searchType === 'spirits' ? 'is-primary' : 'is-outlined'}`}
+                    onClick={() => setSearchType('spirits')}
+                    type="button"
+                  >
+                    Spirits
+                  </button>
+                  <button
                     className={`button ${searchType === 'venues' ? 'is-primary' : 'is-outlined'}`}
                     onClick={() => setSearchType('venues')}
                     type="button"
@@ -83,10 +90,10 @@ function SearchPage() {
             <div className="box">
               <h3 className="title is-5">Filters</h3>
               <div className="field">
-                <label className="label">Category</label>
+                <label className="label" htmlFor="category-select">Category</label>
                 <div className="control">
                   <div className="select is-fullwidth">
-                    <select>
+                    <select id="category-select">
                       <option>All Categories</option>
                       <option>Red Wine</option>
                       <option>White Wine</option>
@@ -97,16 +104,20 @@ function SearchPage() {
                       <option>Vodka</option>
                       <option>Rum</option>
                       <option>Tequila</option>
+                      <option>Brandy</option>
+                      <option>Cognac</option>
+                      <option>Scotch</option>
+                      <option>Bourbon</option>
                     </select>
                   </div>
                 </div>
               </div>
 
               <div className="field">
-                <label className="label">Price Range</label>
+                <label className="label" htmlFor="price-select">Price Range</label>
                 <div className="control">
                   <div className="select is-fullwidth">
-                    <select>
+                    <select id="price-select">
                       <option>Any Price</option>
                       <option>Under $20</option>
                       <option>$20 - $50</option>
@@ -118,10 +129,10 @@ function SearchPage() {
               </div>
 
               <div className="field">
-                <label className="label">Rating</label>
+                <label className="label" htmlFor="rating-select">Rating</label>
                 <div className="control">
                   <div className="select is-fullwidth">
-                    <select>
+                    <select id="rating-select">
                       <option>Any Rating</option>
                       <option>4+ Stars</option>
                       <option>3+ Stars</option>
@@ -203,12 +214,12 @@ function SearchPage() {
                   <div className="card">
                     <div className="card-image">
                       <figure className="image is-4by3">
-                        <img src="https://bulma.io/images/placeholders/128x96.png" alt="Wine" />
+                        <img src="https://bulma.io/images/placeholders/128x96.png" alt="Spirit" />
                       </figure>
                     </div>
                     <div className="card-content">
-                      <p className="title is-5">Dom Pérignon 2012</p>
-                      <p className="subtitle is-6">Champagne, France</p>
+                      <p className="title is-5">Macallan 18 Year</p>
+                      <p className="subtitle is-6">Single Malt Scotch</p>
                       <div className="stars">
                         <span className="icon has-text-warning">
                           <i className="fas fa-star"></i>

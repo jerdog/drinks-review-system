@@ -65,7 +65,7 @@ export interface Beverage {
   name: string
   slug: string
   description?: string
-  type: 'wine' | 'cocktail' | 'liquor'
+  type: 'wine' | 'cocktail' | 'spirit'
   region?: string
   varietal?: string
   abv?: number
@@ -288,7 +288,7 @@ export interface UpdateReviewData {
 export interface CreateBeverageSuggestion {
   name: string
   description?: string
-  type: 'wine' | 'cocktail' | 'liquor'
+  type: 'wine' | 'cocktail' | 'spirit'
   region?: string
   varietal?: string
   abv?: number
