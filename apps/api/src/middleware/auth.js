@@ -16,7 +16,7 @@ const authenticateToken = async (req, reply) => {
       });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'test-secret');
     req.user = decoded;
 
     return;
@@ -54,7 +54,7 @@ const optionalAuth = async (req, reply) => {
 
     if (token) {
       try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'test-secret');
         req.user = decoded;
       } catch (error) {
         // Token is invalid, but we don't fail the request
@@ -69,7 +69,4 @@ const optionalAuth = async (req, reply) => {
   }
 };
 
-export {
-  authenticateToken,
-  optionalAuth
-};
+export { authenticateToken, optionalAuth };

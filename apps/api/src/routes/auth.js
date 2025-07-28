@@ -8,7 +8,7 @@ import { prisma } from 'database';
  * @returns {string} JWT token
  */
 const generateToken = (payload) => {
-  return jwt.sign(payload, process.env.JWT_SECRET || 'your-secret-key', {
+  return jwt.sign(payload, process.env.JWT_SECRET || 'test-secret', {
     expiresIn: '7d'
   });
 };
@@ -106,25 +106,30 @@ const login = async (req, reply) => {
       });
     }
 
-    // Find user by email
-    const user = await prisma.user.findUnique({
-      where: { email }
+    // Find user by email or username
+    const user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { email },
+          { username: email } // Allow login with username
+        ]
+      }
     });
 
     if (!user) {
       return reply.code(401).send({
         success: false,
-        message: 'Invalid email or password'
+        message: 'Invalid credentials'
       });
     }
 
-    // Check password
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    // Verify password
+    const isValidPassword = await bcrypt.compare(password, user.password);
 
-    if (!isPasswordValid) {
+    if (!isValidPassword) {
       return reply.code(401).send({
         success: false,
-        message: 'Invalid email or password'
+        message: 'Invalid credentials'
       });
     }
 
@@ -168,6 +173,32 @@ const getCurrentUser = async (req, reply) => {
           orderBy: { createdAt: 'desc' },
           include: {
             beverage: true
+          }
+        },
+        followers: {
+          take: 5,
+          include: {
+            follower: {
+              select: {
+                id: true,
+                username: true,
+                displayName: true,
+                avatar: true
+              }
+            }
+          }
+        },
+        following: {
+          take: 5,
+          include: {
+            following: {
+              select: {
+                id: true,
+                username: true,
+                displayName: true,
+                avatar: true
+              }
+            }
           }
         },
         _count: {

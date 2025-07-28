@@ -153,25 +153,27 @@ const getUserByUsername = async (req, reply) => {
 };
 
 /**
- * Follow a user
+ * Follow user
  */
 const followUser = async (req, reply) => {
   try {
-    const followerId = req.user.userId;
     const { username } = req.params;
+    const currentUserId = req.user.userId;
 
-    const userToFollow = await prisma.user.findUnique({
+    // Get target user
+    const targetUser = await prisma.user.findUnique({
       where: { username }
     });
 
-    if (!userToFollow) {
+    if (!targetUser) {
       return reply.code(404).send({
         success: false,
         message: 'User not found'
       });
     }
 
-    if (followerId === userToFollow.id) {
+    // Prevent self-following
+    if (currentUserId === targetUser.id) {
       return reply.code(400).send({
         success: false,
         message: 'Cannot follow yourself'
@@ -182,8 +184,8 @@ const followUser = async (req, reply) => {
     const existingFollow = await prisma.follows.findUnique({
       where: {
         followerId_followingId: {
-          followerId,
-          followingId: userToFollow.id
+          followerId: currentUserId,
+          followingId: targetUser.id
         }
       }
     });
@@ -198,14 +200,14 @@ const followUser = async (req, reply) => {
     // Create follow relationship
     await prisma.follows.create({
       data: {
-        followerId,
-        followingId: userToFollow.id
+        followerId: currentUserId,
+        followingId: targetUser.id
       }
     });
 
     return reply.code(200).send({
       success: true,
-      message: 'Successfully followed user'
+      message: `Successfully followed ${targetUser.displayName || targetUser.username}`
     });
   } catch (error) {
     console.error('Follow user error:', error);
@@ -217,42 +219,36 @@ const followUser = async (req, reply) => {
 };
 
 /**
- * Unfollow a user
+ * Unfollow user
  */
 const unfollowUser = async (req, reply) => {
   try {
-    const followerId = req.user.userId;
     const { username } = req.params;
+    const currentUserId = req.user.userId;
 
-    const userToUnfollow = await prisma.user.findUnique({
+    // Get target user
+    const targetUser = await prisma.user.findUnique({
       where: { username }
     });
 
-    if (!userToUnfollow) {
+    if (!targetUser) {
       return reply.code(404).send({
         success: false,
         message: 'User not found'
       });
     }
 
-    if (followerId === userToUnfollow.id) {
-      return reply.code(400).send({
-        success: false,
-        message: 'Cannot unfollow yourself'
-      });
-    }
-
-    // Check if following
-    const existingFollow = await prisma.follows.findUnique({
+    // Check if following relationship exists
+    const follow = await prisma.follows.findUnique({
       where: {
         followerId_followingId: {
-          followerId,
-          followingId: userToUnfollow.id
+          followerId: currentUserId,
+          followingId: targetUser.id
         }
       }
     });
 
-    if (!existingFollow) {
+    if (!follow) {
       return reply.code(400).send({
         success: false,
         message: 'Not following this user'
@@ -263,8 +259,8 @@ const unfollowUser = async (req, reply) => {
     await prisma.follows.delete({
       where: {
         followerId_followingId: {
-          followerId,
-          followingId: userToUnfollow.id
+          followerId: currentUserId,
+          followingId: targetUser.id
         }
       }
     });

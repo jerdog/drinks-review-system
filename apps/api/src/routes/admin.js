@@ -1,4 +1,5 @@
 import { PrismaClient } from 'database';
+import { authenticateToken } from '../middleware/auth.js';
 
 const prisma = new PrismaClient();
 
@@ -30,7 +31,7 @@ export default async function adminRoutes(fastify, options) {
 
   // Get admin dashboard stats
   fastify.get('/dashboard', {
-    preHandler: [fastify.authenticateToken, requireAdmin]
+    preHandler: [authenticateToken, requireAdmin]
   }, async (request, reply) => {
     try {
       const [
@@ -81,7 +82,7 @@ export default async function adminRoutes(fastify, options) {
 
   // Get all users with pagination and search
   fastify.get('/users', {
-    preHandler: [fastify.authenticateToken, requireAdmin]
+    preHandler: [authenticateToken, requireAdmin]
   }, async (request, reply) => {
     try {
       const { page = 1, limit = 20, search = '', role = '' } = request.query;
@@ -146,7 +147,7 @@ export default async function adminRoutes(fastify, options) {
 
   // Update user (ban/unban, role changes)
   fastify.put('/users/:userId', {
-    preHandler: [fastify.authenticateToken, requireAdmin]
+    preHandler: [authenticateToken, requireAdmin]
   }, async (request, reply) => {
     try {
       const { userId } = request.params;
@@ -218,7 +219,7 @@ export default async function adminRoutes(fastify, options) {
 
   // Get pending beverages for approval
   fastify.get('/beverages/pending', {
-    preHandler: [fastify.authenticateToken, requireAdmin]
+    preHandler: [authenticateToken, requireAdmin]
   }, async (request, reply) => {
     try {
       const { page = 1, limit = 20 } = request.query;
@@ -264,7 +265,7 @@ export default async function adminRoutes(fastify, options) {
 
   // Approve/reject beverage
   fastify.put('/beverages/:beverageId/approve', {
-    preHandler: [fastify.authenticateToken, requireAdmin]
+    preHandler: [authenticateToken, requireAdmin]
   }, async (request, reply) => {
     try {
       const { beverageId } = request.params;
@@ -330,7 +331,7 @@ export default async function adminRoutes(fastify, options) {
 
   // Get audit logs
   fastify.get('/audit-logs', {
-    preHandler: [fastify.authenticateToken, requireAdmin]
+    preHandler: [authenticateToken, requireAdmin]
   }, async (request, reply) => {
     try {
       const { page = 1, limit = 20, action = '', entityType = '' } = request.query;
@@ -385,7 +386,7 @@ export default async function adminRoutes(fastify, options) {
 
   // Get content reports
   fastify.get('/reports', {
-    preHandler: [fastify.authenticateToken, requireAdmin]
+    preHandler: [authenticateToken, requireAdmin]
   }, async (request, reply) => {
     try {
       const { page = 1, limit = 20, status = '' } = request.query;
@@ -415,7 +416,7 @@ export default async function adminRoutes(fastify, options) {
 
   // Delete content (reviews, comments, etc.)
   fastify.delete('/content/:type/:id', {
-    preHandler: [fastify.authenticateToken, requireAdmin]
+    preHandler: [authenticateToken, requireAdmin]
   }, async (request, reply) => {
     try {
       const { type, id } = request.params;
@@ -504,7 +505,7 @@ export default async function adminRoutes(fastify, options) {
 
   // Get system statistics
   fastify.get('/stats', {
-    preHandler: [fastify.authenticateToken, requireAdmin]
+    preHandler: [authenticateToken, requireAdmin]
   }, async (request, reply) => {
     try {
       const [

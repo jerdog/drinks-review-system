@@ -5,8 +5,8 @@ import dotenv from 'dotenv';
 // Import routes
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
-import * as beverageRoutes from './routes/beverages.js';
-import * as reviewRoutes from './routes/reviews.js';
+import beverageRoutes from './routes/beverages.js';
+import reviewRoutes from './routes/reviews.js';
 import socialRoutes from './routes/social.js';
 import uploadRoutes from './routes/upload.js';
 import venueRoutes from './routes/venues.js';
@@ -136,4 +136,10 @@ const start = async () => {
   }
 };
 
-start();
+// Only start the server if this file is run directly (not when imported for testing)
+if (import.meta.url === `file://${process.argv[1]}`) {
+  start();
+}
+
+// Export the app for testing
+export default app;

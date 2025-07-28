@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 // Get all beverages (with pagination and filters)
-export const getBeverages = async (request, reply) => {
+const getBeverages = async (request, reply) => {
   try {
     const { page = 1, limit = 20, type, category, search, approved = true } = request.query;
     const skip = (page - 1) * limit;
@@ -54,7 +54,7 @@ export const getBeverages = async (request, reply) => {
 };
 
 // Get a single beverage by ID
-export const getBeverage = async (request, reply) => {
+const getBeverage = async (request, reply) => {
   try {
     const { id } = request.params;
 
@@ -88,7 +88,7 @@ export const getBeverage = async (request, reply) => {
 };
 
 // Create a new beverage (admin only or user suggestion)
-export const createBeverage = async (request, reply) => {
+const createBeverage = async (request, reply) => {
   try {
     const { name, description, type, region, varietal, abv, vintage, categoryId } = request.body;
     const user = request.user;
@@ -98,13 +98,11 @@ export const createBeverage = async (request, reply) => {
     }
 
     // Check if user is admin or if this is a suggestion
-    const isApproved = user.isAdmin;
-    const suggestedBy = user.isAdmin ? null : user.id;
+    const isApproved = user.isAdmin || false;
 
     const beverage = await prisma.beverage.create({
       data: {
         name,
-        slug: name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
         description,
         type,
         region,
@@ -113,7 +111,7 @@ export const createBeverage = async (request, reply) => {
         vintage: vintage ? parseInt(vintage) : null,
         categoryId,
         isApproved,
-        suggestedBy
+        createdBy: user.id
       },
       include: {
         category: true
@@ -128,7 +126,7 @@ export const createBeverage = async (request, reply) => {
 };
 
 // Update a beverage (admin only)
-export const updateBeverage = async (request, reply) => {
+const updateBeverage = async (request, reply) => {
   try {
     const { id } = request.params;
     const updateData = request.body;
@@ -154,7 +152,7 @@ export const updateBeverage = async (request, reply) => {
 };
 
 // Delete a beverage (admin only)
-export const deleteBeverage = async (request, reply) => {
+const deleteBeverage = async (request, reply) => {
   try {
     const { id } = request.params;
     const user = request.user;
@@ -175,7 +173,7 @@ export const deleteBeverage = async (request, reply) => {
 };
 
 // Get beverage categories
-export const getCategories = async (request, reply) => {
+const getCategories = async (request, reply) => {
   try {
     const categories = await prisma.beverageCategory.findMany({
       include: {
@@ -195,7 +193,7 @@ export const getCategories = async (request, reply) => {
 };
 
 // Search beverages
-export const searchBeverages = async (request, reply) => {
+const searchBeverages = async (request, reply) => {
   try {
     const { q, type, category, limit = 10 } = request.query;
 
@@ -232,4 +230,14 @@ export const searchBeverages = async (request, reply) => {
     console.error('Error searching beverages:', error);
     return reply.code(500).send({ error: 'Failed to search beverages' });
   }
+};
+
+export default {
+  getBeverages,
+  getBeverage,
+  createBeverage,
+  updateBeverage,
+  deleteBeverage,
+  getCategories,
+  searchBeverages
 };

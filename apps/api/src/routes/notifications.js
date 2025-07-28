@@ -109,9 +109,7 @@ export default async function notificationRoutes(fastify, options) {
           userId: request.user.id,
           isRead: false
         },
-        data: {
-          isRead: true
-        }
+        data: { isRead: true }
       });
 
       return {
@@ -122,7 +120,7 @@ export default async function notificationRoutes(fastify, options) {
       fastify.log.error(error);
       return reply.status(500).json({
         success: false,
-        message: 'Failed to update notifications'
+        message: 'Failed to mark notifications as read'
       });
     }
   });
@@ -169,17 +167,22 @@ export default async function notificationRoutes(fastify, options) {
     }
   });
 
-  // Get notification count (unread)
+  // Get notification count
   fastify.get('/count', {
     preHandler: fastify.authenticateToken
   }, async (request, reply) => {
     try {
-      const count = await prisma.notification.count({
-        where: {
-          userId: request.user.id,
-          isRead: false
-        }
-      });
+      const { unreadOnly = false } = request.query;
+
+      const where = {
+        userId: request.user.id
+      };
+
+      if (unreadOnly === 'true') {
+        where.isRead = false;
+      }
+
+      const count = await prisma.notification.count({ where });
 
       return {
         success: true,

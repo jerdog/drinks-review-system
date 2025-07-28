@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { createNotification } from './notifications.js';
+import { authenticateToken } from '../middleware/auth.js';
 
 const prisma = new PrismaClient();
 
@@ -8,17 +9,10 @@ const prisma = new PrismaClient();
  */
 export default async function socialRoutes(fastify, options) {
   // Follow user
-  fastify.post('/follow/:userId', async (request, reply) => {
+  fastify.post('/follow/:userId', { preHandler: authenticateToken }, async (request, reply) => {
     try {
       const { userId } = request.params;
       const currentUser = request.user;
-
-      if (!currentUser) {
-        return reply.code(401).send({
-          success: false,
-          message: 'Authentication required'
-        });
-      }
 
       // Prevent self-following
       if (currentUser.userId === userId) {
@@ -92,20 +86,13 @@ export default async function socialRoutes(fastify, options) {
   });
 
   // Unfollow user
-  fastify.delete('/follow/:userId', async (request, reply) => {
+  fastify.delete('/follow/:userId', { preHandler: authenticateToken }, async (request, reply) => {
     try {
       const { userId } = request.params;
       const currentUser = request.user;
 
-      if (!currentUser) {
-        return reply.code(401).send({
-          success: false,
-          message: 'Authentication required'
-        });
-      }
-
       // Check if following relationship exists
-      const existingFollow = await prisma.follows.findUnique({
+      const follow = await prisma.follows.findUnique({
         where: {
           followerId_followingId: {
             followerId: currentUser.userId,
@@ -114,7 +101,7 @@ export default async function socialRoutes(fastify, options) {
         }
       });
 
-      if (!existingFollow) {
+      if (!follow) {
         return reply.code(400).send({
           success: false,
           message: 'Not following this user'
@@ -133,7 +120,7 @@ export default async function socialRoutes(fastify, options) {
 
       return reply.send({
         success: true,
-        message: 'Successfully unfollowed user'
+        message: 'User unfollowed successfully'
       });
     } catch (error) {
       console.error('Unfollow error:', error);
@@ -144,8 +131,108 @@ export default async function socialRoutes(fastify, options) {
     }
   });
 
+  // Get followers
+  fastify.get('/followers/:userId', { preHandler: authenticateToken }, async (request, reply) => {
+    try {
+      const { userId } = request.params;
+      const { page = 1, limit = 20 } = request.query;
+      const skip = (parseInt(page) - 1) * parseInt(limit);
+      const take = parseInt(limit);
+
+      const [followers, total] = await Promise.all([
+        prisma.follows.findMany({
+          where: { followingId: userId },
+          include: {
+            follower: {
+              select: {
+                id: true,
+                username: true,
+                displayName: true,
+                avatar: true,
+                bio: true
+              }
+            }
+          },
+          orderBy: { createdAt: 'desc' },
+          skip,
+          take
+        }),
+        prisma.follows.count({ where: { followingId: userId } })
+      ]);
+
+      const totalPages = Math.ceil(total / take);
+
+      return reply.send({
+        success: true,
+        followers: followers.map(f => f.follower),
+        pagination: {
+          page: parseInt(page),
+          limit: take,
+          total,
+          totalPages
+        }
+      });
+    } catch (error) {
+      console.error('Get followers error:', error);
+      return reply.code(500).send({
+        success: false,
+        message: 'Failed to fetch followers'
+      });
+    }
+  });
+
+  // Get following
+  fastify.get('/following/:userId', { preHandler: authenticateToken }, async (request, reply) => {
+    try {
+      const { userId } = request.params;
+      const { page = 1, limit = 20 } = request.query;
+      const skip = (parseInt(page) - 1) * parseInt(limit);
+      const take = parseInt(limit);
+
+      const [following, total] = await Promise.all([
+        prisma.follows.findMany({
+          where: { followerId: userId },
+          include: {
+            following: {
+              select: {
+                id: true,
+                username: true,
+                displayName: true,
+                avatar: true,
+                bio: true
+              }
+            }
+          },
+          orderBy: { createdAt: 'desc' },
+          skip,
+          take
+        }),
+        prisma.follows.count({ where: { followerId: userId } })
+      ]);
+
+      const totalPages = Math.ceil(total / take);
+
+      return reply.send({
+        success: true,
+        following: following.map(f => f.following),
+        pagination: {
+          page: parseInt(page),
+          limit: take,
+          total,
+          totalPages
+        }
+      });
+    } catch (error) {
+      console.error('Get following error:', error);
+      return reply.code(500).send({
+        success: false,
+        message: 'Failed to fetch following'
+      });
+    }
+  });
+
   // Like review
-  fastify.post('/like/:reviewId', async (request, reply) => {
+  fastify.post('/like/:reviewId', { preHandler: authenticateToken }, async (request, reply) => {
     try {
       const { reviewId } = request.params;
       const currentUser = request.user;
@@ -160,11 +247,7 @@ export default async function socialRoutes(fastify, options) {
       // Check if review exists
       const review = await prisma.review.findUnique({
         where: { id: reviewId },
-        include: {
-          user: {
-            select: { id: true, username: true, displayName: true }
-          }
-        }
+        include: { user: true }
       });
 
       if (!review) {
@@ -199,7 +282,7 @@ export default async function socialRoutes(fastify, options) {
         }
       });
 
-      // Create notification for review author (if not liking own review)
+      // Create notification for review author
       if (review.userId !== currentUser.userId) {
         await createNotification({
           userId: review.userId,
@@ -207,9 +290,9 @@ export default async function socialRoutes(fastify, options) {
           title: 'New Like',
           message: `${currentUser.username || 'Someone'} liked your review`,
           data: {
+            reviewId: reviewId,
             likerId: currentUser.userId,
-            likerUsername: currentUser.username,
-            reviewId: reviewId
+            likerUsername: currentUser.username
           }
         });
       }
@@ -228,7 +311,7 @@ export default async function socialRoutes(fastify, options) {
   });
 
   // Unlike review
-  fastify.delete('/like/:reviewId', async (request, reply) => {
+  fastify.delete('/like/:reviewId', { preHandler: authenticateToken }, async (request, reply) => {
     try {
       const { reviewId } = request.params;
       const currentUser = request.user;
@@ -241,7 +324,7 @@ export default async function socialRoutes(fastify, options) {
       }
 
       // Check if like exists
-      const existingLike = await prisma.like.findUnique({
+      const like = await prisma.like.findUnique({
         where: {
           userId_reviewId: {
             userId: currentUser.userId,
@@ -250,7 +333,7 @@ export default async function socialRoutes(fastify, options) {
         }
       });
 
-      if (!existingLike) {
+      if (!like) {
         return reply.code(400).send({
           success: false,
           message: 'Not liked this review'
@@ -281,10 +364,9 @@ export default async function socialRoutes(fastify, options) {
   });
 
   // Create comment
-  fastify.post('/comment/:reviewId', async (request, reply) => {
+  fastify.post('/comment', { preHandler: authenticateToken }, async (request, reply) => {
     try {
-      const { reviewId } = request.params;
-      const { content } = request.body;
+      const { reviewId, content } = request.body;
       const currentUser = request.user;
 
       if (!currentUser) {
@@ -294,21 +376,40 @@ export default async function socialRoutes(fastify, options) {
         });
       }
 
-      if (!content || content.trim().length === 0) {
+      // Validate required fields
+      if (!reviewId) {
+        return reply.code(400).send({
+          success: false,
+          message: 'Review ID is required'
+        });
+      }
+
+      if (!content) {
         return reply.code(400).send({
           success: false,
           message: 'Comment content is required'
         });
       }
 
+      // Validate content length
+      if (content.trim().length === 0) {
+        return reply.code(400).send({
+          success: false,
+          message: 'Comment content is required'
+        });
+      }
+
+      if (content.length > 1000) {
+        return reply.code(400).send({
+          success: false,
+          message: 'Comment too long (max 1000 characters)'
+        });
+      }
+
       // Check if review exists
       const review = await prisma.review.findUnique({
         where: { id: reviewId },
-        include: {
-          user: {
-            select: { id: true, username: true, displayName: true }
-          }
-        }
+        include: { user: true }
       });
 
       if (!review) {
@@ -321,18 +422,23 @@ export default async function socialRoutes(fastify, options) {
       // Create comment
       const comment = await prisma.comment.create({
         data: {
-          content: content.trim(),
           userId: currentUser.userId,
-          reviewId: reviewId
+          reviewId: reviewId,
+          content: content.trim()
         },
         include: {
           user: {
-            select: { id: true, username: true, displayName: true, avatar: true }
+            select: {
+              id: true,
+              username: true,
+              displayName: true,
+              avatar: true
+            }
           }
         }
       });
 
-      // Create notification for review author (if not commenting on own review)
+      // Create notification for review author
       if (review.userId !== currentUser.userId) {
         await createNotification({
           userId: review.userId,
@@ -340,21 +446,21 @@ export default async function socialRoutes(fastify, options) {
           title: 'New Comment',
           message: `${currentUser.username || 'Someone'} commented on your review`,
           data: {
-            commenterId: currentUser.userId,
-            commenterUsername: currentUser.username,
             reviewId: reviewId,
-            commentId: comment.id
+            commentId: comment.id,
+            commenterId: currentUser.userId,
+            commenterUsername: currentUser.username
           }
         });
       }
 
-      return reply.send({
+      return reply.code(201).send({
         success: true,
         message: 'Comment created successfully',
-        data: comment
+        comment: comment
       });
     } catch (error) {
-      console.error('Comment error:', error);
+      console.error('Create comment error:', error);
       return reply.code(500).send({
         success: false,
         message: 'Failed to create comment'
@@ -363,19 +469,36 @@ export default async function socialRoutes(fastify, options) {
   });
 
   // Get comments for a review
-  fastify.get('/comments/:reviewId', async (request, reply) => {
+  fastify.get('/comments/:reviewId', { preHandler: authenticateToken }, async (request, reply) => {
     try {
       const { reviewId } = request.params;
       const { page = 1, limit = 20 } = request.query;
       const skip = (parseInt(page) - 1) * parseInt(limit);
       const take = parseInt(limit);
 
+      // Check if review exists
+      const review = await prisma.review.findUnique({
+        where: { id: reviewId }
+      });
+
+      if (!review) {
+        return reply.code(404).send({
+          success: false,
+          message: 'Review not found'
+        });
+      }
+
       const [comments, total] = await Promise.all([
         prisma.comment.findMany({
           where: { reviewId },
           include: {
             user: {
-              select: { id: true, username: true, displayName: true, avatar: true }
+              select: {
+                id: true,
+                username: true,
+                displayName: true,
+                avatar: true
+              }
             }
           },
           orderBy: { createdAt: 'desc' },
@@ -389,7 +512,7 @@ export default async function socialRoutes(fastify, options) {
 
       return reply.send({
         success: true,
-        data: comments,
+        comments: comments,
         pagination: {
           page: parseInt(page),
           limit: take,
@@ -407,7 +530,7 @@ export default async function socialRoutes(fastify, options) {
   });
 
   // Check follow status
-  fastify.get('/follow/:userId', async (request, reply) => {
+  fastify.get('/follow/check/:userId', { preHandler: authenticateToken }, async (request, reply) => {
     try {
       const { userId } = request.params;
       const currentUser = request.user;
@@ -430,7 +553,7 @@ export default async function socialRoutes(fastify, options) {
 
       return reply.send({
         success: true,
-        data: { isFollowing: !!follow }
+        following: !!follow
       });
     } catch (error) {
       console.error('Check follow status error:', error);
@@ -442,7 +565,7 @@ export default async function socialRoutes(fastify, options) {
   });
 
   // Check like status
-  fastify.get('/like/:reviewId', async (request, reply) => {
+  fastify.get('/like/check/:reviewId', { preHandler: authenticateToken }, async (request, reply) => {
     try {
       const { reviewId } = request.params;
       const currentUser = request.user;
@@ -465,7 +588,7 @@ export default async function socialRoutes(fastify, options) {
 
       return reply.send({
         success: true,
-        data: { isLiked: !!like }
+        liked: !!like
       });
     } catch (error) {
       console.error('Check like status error:', error);

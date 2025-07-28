@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 // Get all reviews (with pagination and filters)
-export const getReviews = async (request, reply) => {
+const getReviews = async (request, reply) => {
   try {
     const { page = 1, limit = 20, beverageId, userId, rating, sort = 'newest' } = request.query;
     const skip = (page - 1) * limit;
@@ -62,7 +62,7 @@ export const getReviews = async (request, reply) => {
 };
 
 // Get a single review by ID
-export const getReview = async (request, reply) => {
+const getReview = async (request, reply) => {
   try {
     const { id } = request.params;
 
@@ -104,13 +104,18 @@ export const getReview = async (request, reply) => {
 };
 
 // Create a new review
-export const createReview = async (request, reply) => {
+const createReview = async (request, reply) => {
   try {
-    const { beverageId, rating, notes, price, servingType, venueId, isAnonymous, isPublic } = request.body;
+    const { beverageId, venueId, rating, title, content, price, servingSize, servingType } = request.body;
     const user = request.user;
 
     if (!user) {
       return reply.code(401).send({ error: 'Unauthorized' });
+    }
+
+    // Validate required fields
+    if (!beverageId || !rating || !title || !content) {
+      return reply.code(400).send({ error: 'Beverage ID, rating, title, and content are required' });
     }
 
     // Validate rating
@@ -118,19 +123,7 @@ export const createReview = async (request, reply) => {
       return reply.code(400).send({ error: 'Rating must be between 1 and 5' });
     }
 
-    // Check if user already reviewed this beverage
-    const existingReview = await prisma.review.findFirst({
-      where: {
-        userId: user.userId,
-        beverageId
-      }
-    });
-
-    if (existingReview) {
-      return reply.code(400).send({ error: 'You have already reviewed this beverage' });
-    }
-
-    // Verify beverage exists
+    // Check if beverage exists
     const beverage = await prisma.beverage.findUnique({
       where: { id: beverageId }
     });
@@ -139,24 +132,36 @@ export const createReview = async (request, reply) => {
       return reply.code(404).send({ error: 'Beverage not found' });
     }
 
+    // Check if venue exists if provided
+    if (venueId) {
+      const venue = await prisma.venue.findUnique({
+        where: { id: venueId }
+      });
+
+      if (!venue) {
+        return reply.code(404).send({ error: 'Venue not found' });
+      }
+    }
+
     const review = await prisma.review.create({
       data: {
-        rating,
-        notes,
-        price: price ? parseFloat(price) : null,
-        servingType,
-        isAnonymous: isAnonymous || false,
-        isPublic: isPublic !== false, // Default to public
-        userId: user.userId,
         beverageId,
-        venueId: venueId || null
+        venueId,
+        userId: user.userId,
+        rating: parseInt(rating),
+        title,
+        content,
+        price: price ? parseFloat(price) : null,
+        servingSize: servingSize ? parseFloat(servingSize) : null,
+        servingType,
+        isPublic: true
       },
       include: {
         user: {
           select: { id: true, username: true, displayName: true, avatar: true }
         },
         beverage: {
-          select: { id: true, name: true, type: true }
+          select: { id: true, name: true, type: true, region: true }
         },
         venue: {
           select: { id: true, name: true, city: true }
@@ -172,31 +177,31 @@ export const createReview = async (request, reply) => {
 };
 
 // Update a review
-export const updateReview = async (request, reply) => {
+const updateReview = async (request, reply) => {
   try {
     const { id } = request.params;
-    const { rating, notes, price, servingType, venueId, isAnonymous, isPublic } = request.body;
+    const { rating, title, content, price, servingSize, servingType, isPublic } = request.body;
     const user = request.user;
 
     if (!user) {
       return reply.code(401).send({ error: 'Unauthorized' });
     }
 
-    // Check if review exists and user owns it
+    // Check if review exists
     const existingReview = await prisma.review.findUnique({
-      where: { id },
-      include: { user: true }
+      where: { id }
     });
 
     if (!existingReview) {
       return reply.code(404).send({ error: 'Review not found' });
     }
 
-    if (existingReview.userId !== user.userId && !user.isAdmin) {
-      return reply.code(403).send({ error: 'You can only edit your own reviews' });
+    // Check if user owns the review
+    if (existingReview.userId !== user.userId) {
+      return reply.code(403).send({ error: 'Not authorized to update this review' });
     }
 
-    // Validate rating
+    // Validate rating if provided
     if (rating && (rating < 1 || rating > 5)) {
       return reply.code(400).send({ error: 'Rating must be between 1 and 5' });
     }
@@ -204,20 +209,20 @@ export const updateReview = async (request, reply) => {
     const review = await prisma.review.update({
       where: { id },
       data: {
-        ...(rating && { rating }),
-        ...(notes !== undefined && { notes }),
+        ...(rating && { rating: parseInt(rating) }),
+        ...(title && { title }),
+        ...(content && { content }),
         ...(price !== undefined && { price: price ? parseFloat(price) : null }),
-        ...(servingType !== undefined && { servingType }),
-        ...(isAnonymous !== undefined && { isAnonymous }),
-        ...(isPublic !== undefined && { isPublic }),
-        ...(venueId !== undefined && { venueId: venueId || null })
+        ...(servingSize !== undefined && { servingSize: servingSize ? parseFloat(servingSize) : null }),
+        ...(servingType && { servingType }),
+        ...(isPublic !== undefined && { isPublic })
       },
       include: {
         user: {
           select: { id: true, username: true, displayName: true, avatar: true }
         },
         beverage: {
-          select: { id: true, name: true, type: true }
+          select: { id: true, name: true, type: true, region: true }
         },
         venue: {
           select: { id: true, name: true, city: true }
@@ -233,7 +238,7 @@ export const updateReview = async (request, reply) => {
 };
 
 // Delete a review
-export const deleteReview = async (request, reply) => {
+const deleteReview = async (request, reply) => {
   try {
     const { id } = request.params;
     const user = request.user;
@@ -242,18 +247,18 @@ export const deleteReview = async (request, reply) => {
       return reply.code(401).send({ error: 'Unauthorized' });
     }
 
-    // Check if review exists and user owns it
-    const existingReview = await prisma.review.findUnique({
-      where: { id },
-      include: { user: true }
+    // Check if review exists
+    const review = await prisma.review.findUnique({
+      where: { id }
     });
 
-    if (!existingReview) {
+    if (!review) {
       return reply.code(404).send({ error: 'Review not found' });
     }
 
-    if (existingReview.userId !== user.userId && !user.isAdmin) {
-      return reply.code(403).send({ error: 'You can only delete your own reviews' });
+    // Check if user owns the review
+    if (review.userId !== user.userId) {
+      return reply.code(403).send({ error: 'Not authorized to delete this review' });
     }
 
     await prisma.review.delete({
@@ -268,7 +273,7 @@ export const deleteReview = async (request, reply) => {
 };
 
 // Get user's reviews
-export const getUserReviews = async (request, reply) => {
+const getUserReviews = async (request, reply) => {
   try {
     const { userId } = request.params;
     const { page = 1, limit = 20 } = request.query;
@@ -316,7 +321,7 @@ export const getUserReviews = async (request, reply) => {
 };
 
 // Like/unlike a review
-export const toggleReviewLike = async (request, reply) => {
+const toggleReviewLike = async (request, reply) => {
   try {
     const { id } = request.params;
     const user = request.user;
@@ -362,4 +367,14 @@ export const toggleReviewLike = async (request, reply) => {
     console.error('Error toggling review like:', error);
     return reply.code(500).send({ error: 'Failed to toggle like' });
   }
+};
+
+export default {
+  getReviews,
+  getReview,
+  createReview,
+  updateReview,
+  deleteReview,
+  getUserReviews,
+  toggleReviewLike
 };

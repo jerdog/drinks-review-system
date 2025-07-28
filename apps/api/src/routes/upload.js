@@ -9,9 +9,11 @@ const prisma = new PrismaClient();
 /**
  * File upload routes
  */
+import multipart from '@fastify/multipart';
+
 export default async function uploadRoutes(fastify, options) {
   // Register multipart support
-  await fastify.register(import('@fastify/multipart'), {
+  await fastify.register(multipart, {
     limits: {
       fileSize: 10 * 1024 * 1024, // 10MB limit
       files: 5 // Max 5 files per request
@@ -98,30 +100,30 @@ export default async function uploadRoutes(fastify, options) {
     }
   });
 
-  // Upload multiple images for review
+  // Upload multiple images
   fastify.post('/images', {
     preHandler: fastify.authenticateToken
   }, async (request, reply) => {
     try {
-      const files = request.files();
+      const files = await request.files();
       const uploadedPhotos = [];
 
-      for await (const file of files) {
+      for await (const data of files) {
         // Validate file type
         const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-        if (!allowedTypes.includes(file.mimetype)) {
+        if (!allowedTypes.includes(data.mimetype)) {
           continue; // Skip invalid files
         }
 
         // Validate file size (5MB max)
         const maxSize = 5 * 1024 * 1024;
-        if (file.file.bytesRead > maxSize) {
+        if (data.file.bytesRead > maxSize) {
           continue; // Skip oversized files
         }
 
         // Generate unique filename
         const fileId = uuidv4();
-        const extension = path.extname(file.filename);
+        const extension = path.extname(data.filename);
         const filename = `${fileId}${extension}`;
 
         // Create uploads directory if it doesn't exist
@@ -129,7 +131,7 @@ export default async function uploadRoutes(fastify, options) {
         await fs.mkdir(uploadDir, { recursive: true });
 
         // Process and save image
-        const buffer = await file.toBuffer();
+        const buffer = await data.toBuffer();
         const processedBuffer = await sharp(buffer)
           .resize(1200, 1200, { fit: 'inside', withoutEnlargement: true })
           .jpeg({ quality: 85 })
@@ -142,10 +144,10 @@ export default async function uploadRoutes(fastify, options) {
         const photo = await prisma.photo.create({
           data: {
             url: `/uploads/${filename}`,
-            altText: file.fields?.altText?.value || '',
+            altText: data.fields?.altText?.value || '',
             userId: request.user.id,
-            reviewId: file.fields?.reviewId?.value || null,
-            beverageId: file.fields?.beverageId?.value || null
+            reviewId: data.fields?.reviewId?.value || null,
+            beverageId: data.fields?.beverageId?.value || null
           }
         });
 

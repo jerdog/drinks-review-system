@@ -9,8 +9,8 @@
     "build": "echo 'No build step needed for JavaScript'",
     "start": "node src/index.js",
     "clean": "rm -rf dist",
-    "test": "jest",
-    "test:watch": "jest --watch",
+    "test": "node --experimental-vm-modules node_modules/.bin/jest",
+    "test:watch": "node --experimental-vm-modules node_modules/.bin/jest --watch",
     "lint": "eslint src --ext .js",
     "lint:fix": "eslint src --ext .js --fix"
   },
