@@ -1,6 +1,6 @@
 # TODO List - Wine, Cocktail, and Spirit Review Platform
 
-## ✅ Phase 3: Social Features (COMPLETED)
+## ✅ Phase 3: Social Features (COMPLETED - Recently Fixed)
 
 ### Authentication & OAuth
 - [x] Implement OAuth flow for Google and GitHub (planned for Phase 4)
@@ -8,11 +8,18 @@
 - [x] Handle OAuth callback routes (planned for Phase 4)
 
 ### Social Interactions
-- [x] Implement follow/unfollow user functionality ✅
-- [x] Implement like/unlike review functionality ✅
-- [x] Implement comment system on reviews ✅
+- [x] Implement follow/unfollow user functionality ✅ (Fixed July 2025)
+- [x] Implement like/unlike review functionality ✅ (Fixed July 2025)
+- [x] Implement comment system on reviews ✅ (Fixed July 2025)
 - [x] Add user activity feed (planned for Phase 4)
 - [x] Create notification system (planned for Phase 4)
+
+### Recent Social Routes Fixes (July 2025)
+- [x] Fixed authentication middleware application to individual routes
+- [x] Standardized API response formats to match frontend expectations
+- [x] Fixed error message consistency across social endpoints
+- [x] Resolved database schema alignment issues
+- [x] Updated test data to match current schema requirements
 
 ### User Profiles
 - [x] Enhance user profile pages ✅
@@ -83,11 +90,11 @@
 ## Testing & Quality Assurance
 
 ### Unit Testing
-- [ ] Add unit tests for API endpoints
-- [ ] Test authentication flows
-- [ ] Test review creation and management
+- [x] Add unit tests for API endpoints ✅
+- [x] Test authentication flows ✅
+- [x] Test review creation and management ✅
 - [ ] Test beverage search and filtering
-- [ ] Test social features (follow, like, comment)
+- [x] Test social features (follow, like, comment) ✅ (Fixed July 2025)
 
 ### Integration Testing
 - [ ] Test API integration with external services
