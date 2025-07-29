@@ -1,8 +1,8 @@
 # System Architecture Documentation
 ## Wine, Cocktail, and Spirit Review Platform
 
-### Version: 2.1
-### Status: Production Ready (Social Routes Fixed)
+### Version: 2.2
+### Status: Production Ready (Search & Discovery Complete)
 ### Last Updated: July 2025
 
 ---
@@ -16,6 +16,7 @@ The Wine, Cocktail, and Spirit Review Platform is a full-stack web application b
 - 🔧 **API Response Standardization**: Updated social endpoints to return consistent response formats matching frontend expectations
 - 🔧 **Error Handling**: Improved error messages and validation for social features
 - 🔧 **Database Schema**: Fixed beverage category creation to include required fields
+- 🆕 **Search & Discovery System**: Implemented comprehensive search endpoints with advanced filtering, sorting, and validation
 
 ### 1.1 Architecture Pattern
 - **Monorepo Structure**: Shared packages and types
@@ -417,6 +418,15 @@ DELETE /admin/content/:type/:id # Delete content
 ```
 POST   /upload/image      # Upload image with optimization
 DELETE /upload/image/:filename # Delete uploaded image
+```
+
+#### 4.1.9 Search Endpoints
+```
+GET    /search/beverages  # Search beverages with filters
+GET    /search/venues     # Search venues with location filters
+GET    /search/reviews    # Search reviews with content filters
+GET    /search/users      # Search users with activity filters
+GET    /search/global     # Global search across all content types
 ```
 
 ### 4.2 API Response Format
