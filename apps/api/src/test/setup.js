@@ -279,3 +279,32 @@ export const mockFileUpload = () => {
 
 // Export testPrisma for use in tests
 export { testPrisma };
+
+// Export cleanupTestDatabase for use in tests
+export { cleanupTestDatabase };
+
+// Helper function to create test venue
+export const createTestVenue = async (venueData = {}) => {
+  const uniqueId = generateUniqueId();
+
+  const defaultVenue = {
+    name: `Test Venue ${uniqueId}`,
+    slug: `test-venue-${uniqueId}`,
+    description: 'Test venue description',
+    address: '123 Test Street',
+    city: 'Test City',
+    state: 'Test State',
+    country: 'Test Country',
+    latitude: 40.7128,
+    longitude: -74.0060,
+    website: 'https://testvenue.com',
+    phone: '555-123-4567',
+    isVerified: true
+  };
+
+  const venue = { ...defaultVenue, ...venueData };
+
+  return await testPrisma.venue.create({
+    data: venue
+  });
+};
